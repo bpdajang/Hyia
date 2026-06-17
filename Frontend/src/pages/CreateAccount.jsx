@@ -5,6 +5,7 @@ import {
   PrimaryBtn,
   GhostBtn,
 } from "./StudentOnboarding.jsx";
+import { Mail, Lock, GraduationCap, Landmark, Building2 } from "lucide-react";
 
 const h1Style = {
   fontFamily: "var(--font-display)",
@@ -18,6 +19,7 @@ const subStyle = {
   color: "var(--color-text-2)",
   marginBottom: 28,
   fontSize: "1rem",
+  itemAlign: "inline",
 };
 
 const labelStyle = {
@@ -43,9 +45,9 @@ const inputStyle = {
 
 // Maps the selected role (carried via its onboarding page id) to a friendly label.
 const ROLE_LABELS = {
-  "student-signup": { icon: "🎓", label: "a Student" },
-  "alumni-signup": { icon: "🏛️", label: "an Alumni / Mentor" },
-  "company-signup": { icon: "🏢", label: "a Company" },
+  "student-signup": { icon: <GraduationCap />, label: "a Student" },
+  "alumni-signup": { icon: <Landmark />, label: "an Alumni / Mentor" },
+  "company-signup": { icon: <Building2 />, label: "a Company" },
 };
 
 export default function CreateAccountPage({ role, onNavigate }) {
@@ -97,7 +99,9 @@ export default function CreateAccountPage({ role, onNavigate }) {
         <div>
           <label style={labelStyle}>Email</label>
           <div style={{ position: "relative" }}>
-            <span style={iconStyle}>✉️</span>
+            <span style={iconStyle}>
+              <Mail />
+            </span>
             <input
               type="email"
               autoComplete="email"
@@ -115,7 +119,9 @@ export default function CreateAccountPage({ role, onNavigate }) {
         <div>
           <label style={labelStyle}>Password</label>
           <div style={{ position: "relative" }}>
-            <span style={iconStyle}>🔒</span>
+            <span style={iconStyle}>
+              <Lock />
+            </span>
             <input
               type={showPw ? "text" : "password"}
               autoComplete="new-password"
@@ -173,7 +179,9 @@ export default function CreateAccountPage({ role, onNavigate }) {
             pointerEvents: canContinue ? "auto" : "none",
           }}
         >
-          <PrimaryBtn onClick={() => onNavigate(target, { email })}>Next →</PrimaryBtn>
+          <PrimaryBtn onClick={() => onNavigate(target, { email })}>
+            Next →
+          </PrimaryBtn>
         </span>
       </div>
     </AuthShell>

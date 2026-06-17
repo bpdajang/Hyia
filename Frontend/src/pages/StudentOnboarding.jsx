@@ -80,7 +80,6 @@ export function StudentSignupPage({ onNavigate }) {
   const [university, setUniversity] = useState("");
   const [course, setCourse] = useState("");
   const [year, setYear] = useState("Year 1");
-  const [projects, setProjects] = useState("");
 
   return (
     <AuthShell>
@@ -144,20 +143,13 @@ export function StudentSignupPage({ onNavigate }) {
             ))}
           </select>
         </FormGroup>
-        <FormGroup label="Projects Completed" optional fullWidth>
-          <textarea
-            placeholder="Briefly describe any projects you've worked on…"
-            value={projects}
-            onChange={(e) => setProjects(e.target.value)}
-          />
-        </FormGroup>
       </div>
 
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
         <GhostBtn onClick={() => onNavigate("create-account")}>← Back</GhostBtn>
         <PrimaryBtn
           onClick={() =>
-            onNavigate("student-skills", { name, email, university, course, year, projects })
+            onNavigate("student-skills", { name, email, university, course, year })
           }
         >
           Continue →

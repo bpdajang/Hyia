@@ -57,6 +57,7 @@ function buildCurrentUser(data, role) {
       skills: data.skills || [],
       connections: 0,
       endorsements: 0,
+      role: "student",
     };
   }
 
@@ -70,9 +71,17 @@ function buildCurrentUser(data, role) {
       title,
       bio: data.bio || "",
       university: data.university || "",
+      gradYear: data.gradYear || "",
+      jobTitle: data.jobTitle || "",
+      company: data.company || "",
+      linkedin: data.linkedin || "",
       expertise: data.expertise || [],
+      offerings: data.offerings || [],
+      availability: data.availability || "",
+      menteeCapacity: data.menteeCapacity ?? 3,
       connections: 0,
       endorsements: 0,
+      role: "alumni",
     };
   }
 
@@ -83,9 +92,15 @@ function buildCurrentUser(data, role) {
       name,
       title: data.industry || "Company",
       bio: data.description || "",
+      industry: data.industry || "",
+      size: data.size || "",
       location: data.location || "",
+      website: data.website || "",
+      contactEmail: data.contactEmail || "",
+      followers: 0,
       connections: 0,
       endorsements: 0,
+      role: "company",
     };
   }
 

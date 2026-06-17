@@ -183,6 +183,7 @@ export function AlumniExpertisePage({ onNavigate }) {
   ]);
   const [bio, setBio] = useState("");
   const [availability, setAvailability] = useState("1–2 hrs / week");
+  const [menteeCapacity, setMenteeCapacity] = useState(3);
 
   function addSkill(name) {
     if (!selected.includes(name)) setSelected((s) => [...s, name]);
@@ -270,8 +271,16 @@ export function AlumniExpertisePage({ onNavigate }) {
         />
       </FormGroup>
 
-      {/* Availability */}
-      <div style={{ marginTop: 16, marginBottom: 8 }}>
+      {/* Availability + Mentee Capacity */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+          marginTop: 16,
+          marginBottom: 8,
+        }}
+      >
         <FormGroup label="Availability for mentoring">
           <select
             value={availability}
@@ -283,6 +292,27 @@ export function AlumniExpertisePage({ onNavigate }) {
               </option>
             ))}
           </select>
+        </FormGroup>
+        <FormGroup label="Max Mentees at a Time">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={menteeCapacity}
+              onChange={(e) =>
+                setMenteeCapacity(
+                  Math.max(1, Math.min(20, Number(e.target.value)))
+                )
+              }
+              style={{ width: 80 }}
+            />
+            <span
+              style={{ color: "var(--color-text-3)", fontSize: "0.8rem" }}
+            >
+              mentees
+            </span>
+          </div>
         </FormGroup>
       </div>
 
@@ -297,7 +327,13 @@ export function AlumniExpertisePage({ onNavigate }) {
         <GhostBtn onClick={() => onNavigate("alumni-signup")}>← Back</GhostBtn>
         <PrimaryBtn
           onClick={() =>
-            onNavigate("home", { expertise: selected, bio, availability, offerings })
+            onNavigate("home", {
+              expertise: selected,
+              bio,
+              availability,
+              offerings,
+              menteeCapacity,
+            })
           }
         >
           Finish & Enter Hyia →

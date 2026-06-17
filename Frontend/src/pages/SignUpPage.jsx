@@ -1,21 +1,22 @@
 import { useNetworkCanvas } from "../hooks/useNetworkCanvas.js";
 import { Logo } from "../components/ui/index.jsx";
+import { GraduationCap, Landmark, Building2 } from "lucide-react";
 
 const ROLES = [
   {
-    icon: "🎓",
+    icon: <GraduationCap />,
     label: "Student",
     desc: "Connect with mentors & discover opportunities",
     page: "student-signup",
   },
   {
-    icon: "🏛️",
+    icon: <Landmark />,
     label: "Alumni / Mentor",
     desc: "Guide the next generation of talent",
     page: "alumni-signup",
   },
   {
-    icon: "🏢",
+    icon: <Building2 />,
     label: "Company",
     desc: "Discover and recruit top academic talent",
     page: "company-signup",
