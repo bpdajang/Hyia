@@ -141,15 +141,19 @@ export default function CreateAccountPage({ role, onNavigate }) {
               {showPw ? "Hide" : "Show"}
             </button>
           </div>
-          <p
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--color-text-3)",
-              marginTop: 8,
-            }}
-          >
-            Use at least 8 characters.
-          </p>
+          {password ? (
+            <PasswordStrength password={password} />
+          ) : (
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--color-text-3)",
+                marginTop: 8,
+              }}
+            >
+              Use at least 8 characters.
+            </p>
+          )}
         </div>
       </div>
 
@@ -185,6 +189,47 @@ export default function CreateAccountPage({ role, onNavigate }) {
         </span>
       </div>
     </AuthShell>
+  );
+}
+
+function PasswordStrength({ password }) {
+  const checks = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+  const score = checks.filter(Boolean).length;
+  const labels = ["", "Weak", "Fair", "Good", "Strong"];
+  const colors = ["", "#ef4444", "#FFB74D", "#6C63FF", "#00D4AA"];
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 5 }}>
+        {[1, 2, 3, 4].map((n) => (
+          <div
+            key={n}
+            style={{
+              flex: 1,
+              height: 3,
+              borderRadius: 2,
+              background: n <= score ? colors[score] : "var(--color-border)",
+              transition: "background 0.3s",
+            }}
+          />
+        ))}
+      </div>
+      <p
+        style={{
+          margin: 0,
+          fontSize: "0.72rem",
+          color: colors[score] || "var(--color-text-3)",
+          fontWeight: 500,
+        }}
+      >
+        {labels[score] || "Too short"}
+      </p>
+    </div>
   );
 }
 

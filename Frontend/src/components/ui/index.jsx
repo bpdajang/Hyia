@@ -280,6 +280,76 @@ export function AiTag() {
   );
 }
 
+// ── Skeleton components ────────────────────────────────────────────────────────
+
+export function Skeleton({ width = "100%", height = 16, style = {} }) {
+  return (
+    <div
+      className="skeleton"
+      style={{ width, height, borderRadius: 6, flexShrink: 0, ...style }}
+    />
+  );
+}
+
+export function SkeletonPost() {
+  return (
+    <div style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <Skeleton width={42} height={42} style={{ borderRadius: "50%" }} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
+          <Skeleton width="40%" height={13} />
+          <Skeleton width="60%" height={11} />
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+        <Skeleton width="100%" height={13} />
+        <Skeleton width="95%" height={13} />
+        <Skeleton width="80%" height={13} />
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <Skeleton width={60} height={24} style={{ borderRadius: 12 }} />
+        <Skeleton width={60} height={24} style={{ borderRadius: 12 }} />
+        <Skeleton width={60} height={24} style={{ borderRadius: 12 }} />
+      </div>
+    </div>
+  );
+}
+
+export function SkeletonPeopleCard() {
+  return (
+    <div style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: "20px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      <Skeleton width={56} height={56} style={{ borderRadius: "50%" }} />
+      <Skeleton width="70%" height={13} />
+      <Skeleton width="85%" height={11} />
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "center" }}>
+        <Skeleton width={48} height={22} style={{ borderRadius: 12 }} />
+        <Skeleton width={52} height={22} style={{ borderRadius: 12 }} />
+      </div>
+      <Skeleton width={90} height={30} style={{ borderRadius: 20, marginTop: 4 }} />
+    </div>
+  );
+}
+
+export function SkeletonOppCard() {
+  return (
+    <div style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 16 }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+        <Skeleton width={36} height={36} style={{ borderRadius: 8 }} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <Skeleton width="55%" height={13} />
+          <Skeleton width="40%" height={11} />
+        </div>
+      </div>
+      <Skeleton width="100%" height={11} style={{ marginBottom: 6 }} />
+      <Skeleton width="85%" height={11} style={{ marginBottom: 12 }} />
+      <div style={{ display: "flex", gap: 6 }}>
+        <Skeleton width={50} height={20} style={{ borderRadius: 10 }} />
+        <Skeleton width={60} height={20} style={{ borderRadius: 10 }} />
+      </div>
+    </div>
+  );
+}
+
 export function PostBadge({ type, label }) {
   const colors = {
     mentor: { bg: "rgba(108,99,255,0.15)", color: "#6C63FF" },

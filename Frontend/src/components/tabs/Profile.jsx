@@ -25,8 +25,12 @@ import {
   Camera,
   Briefcase,
   ExternalLink,
+  X,
+  Check,
+  CheckCheck,
 } from "lucide-react";
 import { Avatar, SkillTag, SkillPill } from "../ui/index.jsx";
+import { showToast } from "../ui/toast.js";
 
 const PROJECT_ICON_MAP = {
   CreditCard,
@@ -1115,60 +1119,136 @@ function AlumniPostsTab() {
 }
 
 // ---- Alumni People Tab ----
+const MOCK_MENTEE_REQUESTS = [
+  {
+    id: "req-1",
+    name: "Michael Forson",
+    initials: "MF",
+    color: "#6C63FF",
+    title: "BSc Computer Science · University of Ghana",
+    message: "Hi! I'm deeply interested in fintech and would love guidance on breaking into the industry. I've been building a mobile payments prototype and could use your expertise.",
+    goals: "Secure a fintech internship by mid-year, improve system design skills.",
+    date: "2 days ago",
+    status: "pending",
+  },
+  {
+    id: "req-2",
+    name: "Jonas Offei",
+    initials: "JO",
+    color: "#00D4AA",
+    title: "BSc Information Technology · KNUST",
+    message: "I admire your career trajectory and would value your mentorship as I navigate my final year and job search. I'm particularly interested in product-focused roles.",
+    goals: "Land a product or engineering role in Ghana's tech ecosystem after graduation.",
+    date: "5 days ago",
+    status: "pending",
+  },
+];
+
+function MenteeRequestCard({ req, onApprove, onDecline }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (req.status === "approved") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(0,212,170,0.06)", border: "1.5px solid #00D4AA", borderRadius: "var(--radius-md)" }}>
+        <Avatar initials={req.initials} color={req.color} size="sm" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--color-text-1)" }}>{req.name}</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>{req.title}</div>
+        </div>
+        <span style={{ fontSize: "0.75rem", color: "#00D4AA", fontWeight: 600 }}>Active mentee ✓</span>
+      </div>
+    );
+  }
+
+  if (req.status === "declined") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", opacity: 0.55 }}>
+        <Avatar initials={req.initials} color={req.color} size="sm" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--color-text-2)" }}>{req.name}</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>Request declined</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "var(--color-card)", border: "1.5px solid var(--color-border)", borderRadius: "var(--radius-md)", overflow: "hidden", transition: "border-color 0.2s" }}>
+      <div
+        onClick={() => setExpanded((v) => !v)}
+        style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", cursor: "pointer" }}
+      >
+        <Avatar initials={req.initials} color={req.color} size="sm" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-1)" }}>{req.name}</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{req.title}</div>
+        </div>
+        <span style={{ fontSize: "0.72rem", color: "var(--color-text-3)", flexShrink: 0 }}>{req.date}</span>
+        <span style={{ color: "var(--color-text-3)", fontSize: "0.7rem", marginLeft: 4 }}>{expanded ? "▲" : "▼"}</span>
+      </div>
+      {expanded && (
+        <div style={{ borderTop: "1px solid var(--color-border)", padding: "14px 16px", background: "var(--color-surface)" }}>
+          <p style={{ fontSize: "0.83rem", color: "var(--color-text-2)", lineHeight: 1.6, marginBottom: 10 }}>{req.message}</p>
+          <div style={{ background: "rgba(108,99,255,0.06)", border: "1px solid rgba(108,99,255,0.18)", borderRadius: "var(--radius-sm)", padding: "8px 12px", marginBottom: 14 }}>
+            <div style={{ fontSize: "0.72rem", fontWeight: 600, color: "#6C63FF", marginBottom: 4 }}>Goals</div>
+            <p style={{ fontSize: "0.8rem", color: "var(--color-text-2)", margin: 0 }}>{req.goals}</p>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => onApprove(req.id)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg, #7B73FF, #00D4AA)", color: "white", border: "none", borderRadius: "var(--radius-sm)", padding: "8px 0", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer" }}>
+              <Check size={14} /> Accept
+            </button>
+            <button onClick={() => onDecline(req.id)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "none", color: "#ef4444", border: "1.5px solid #ef4444", borderRadius: "var(--radius-sm)", padding: "8px 0", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer" }}>
+              <X size={14} /> Decline
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AlumniPeopleTab({ onViewProfile }) {
+  const [requests, setRequests] = useState(MOCK_MENTEE_REQUESTS);
+
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
+  const activeCount = requests.filter((r) => r.status === "approved").length;
+
+  function handleApprove(id) {
+    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "approved" } : r));
+    showToast("Mentee request accepted!");
+  }
+
+  function handleDecline(id) {
+    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "declined" } : r));
+    showToast("Request declined", "error");
+  }
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
       <ProfileSection title="Connections (0)">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "28px 0",
-            gap: 10,
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
           <Users size={30} style={{ color: "var(--color-text-3)" }} />
-          <p
-            style={{
-              color: "var(--color-text-3)",
-              fontSize: "0.82rem",
-              textAlign: "center",
-              lineHeight: 1.5,
-              maxWidth: 220,
-              margin: 0,
-            }}
-          >
+          <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 220, margin: 0 }}>
             No connections yet. Connect with students and peers on Hyia.
           </p>
         </div>
       </ProfileSection>
 
-      <ProfileSection title="Mentees (0)">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "28px 0",
-            gap: 10,
-          }}
-        >
-          <GraduationCap size={30} style={{ color: "var(--color-text-3)" }} />
-          <p
-            style={{
-              color: "var(--color-text-3)",
-              fontSize: "0.82rem",
-              textAlign: "center",
-              lineHeight: 1.5,
-              maxWidth: 220,
-              margin: 0,
-            }}
-          >
-            No active mentees yet. Students can request your mentorship through
-            your profile.
-          </p>
-        </div>
+      <ProfileSection title={`Mentee Requests${pendingCount > 0 ? ` (${pendingCount} pending)` : activeCount > 0 ? ` (${activeCount} active)` : " (0)"}`}>
+        {requests.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
+            <GraduationCap size={30} style={{ color: "var(--color-text-3)" }} />
+            <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 220, margin: 0 }}>
+              No active mentees yet. Students can request your mentorship through your profile.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
+            {requests.map((req) => (
+              <MenteeRequestCard key={req.id} req={req} onApprove={handleApprove} onDecline={handleDecline} />
+            ))}
+          </div>
+        )}
       </ProfileSection>
     </div>
   );
@@ -3338,6 +3418,120 @@ function CompanyPostsTab() {
   );
 }
 
+// ---- Company Open Applications Panel ----
+const MOCK_APPLICANTS = [
+  {
+    id: "app-1",
+    name: "Priscilla Boateng",
+    initials: "PB",
+    color: "#6C63FF",
+    role: "UX Design Intern",
+    university: "KNUST · Year 3",
+    skills: ["Figma", "User Research", "Prototyping"],
+    summary: "Strong portfolio with 2 completed UX case studies. Top of class in HCI.",
+    status: "pending",
+  },
+  {
+    id: "app-2",
+    name: "Bernard Mensah",
+    initials: "BM",
+    color: "#FFB74D",
+    role: "Software Engineering Intern",
+    university: "University of Ghana · Year 2",
+    skills: ["React", "Node.js", "Python"],
+    summary: "Built a campus ride-sharing app with 200+ users. Open-source contributor.",
+    status: "pending",
+  },
+  {
+    id: "app-3",
+    name: "Abena Kyei",
+    initials: "AK",
+    color: "#00D4AA",
+    role: "Data Analyst Intern",
+    university: "Ashesi University · Year 4",
+    skills: ["SQL", "Python", "Tableau"],
+    summary: "Led data analysis for a climate research project. Strong analytical background.",
+    status: "pending",
+  },
+];
+
+function ApplicantCard({ app, onShortlist, onReject }) {
+  if (app.status === "shortlisted") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(0,212,170,0.06)", border: "1.5px solid #00D4AA", borderRadius: "var(--radius-md)" }}>
+        <Avatar initials={app.initials} color={app.color} size="sm" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-1)" }}>{app.name}</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>{app.role} · {app.university}</div>
+        </div>
+        <span style={{ fontSize: "0.75rem", color: "#00D4AA", fontWeight: 600, flexShrink: 0 }}>Shortlisted ✓</span>
+      </div>
+    );
+  }
+
+  if (app.status === "rejected") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", opacity: 0.5 }}>
+        <Avatar initials={app.initials} color={app.color} size="sm" />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-2)" }}>{app.name}</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>Not moved forward</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "var(--color-card)", border: "1.5px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "14px 16px", display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-start" }}>
+      <Avatar initials={app.initials} color={app.color} size="sm" />
+      <div style={{ flex: 1, minWidth: 180 }}>
+        <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-1)", marginBottom: 2 }}>{app.name}</div>
+        <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)", marginBottom: 8 }}>{app.role} · {app.university}</div>
+        <p style={{ fontSize: "0.82rem", color: "var(--color-text-2)", lineHeight: 1.5, margin: "0 0 10px" }}>{app.summary}</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {app.skills.map((s) => (
+            <span key={s} style={{ background: "rgba(108,99,255,0.1)", color: "#6C63FF", borderRadius: 10, padding: "2px 8px", fontSize: "0.72rem" }}>{s}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
+        <button onClick={() => onShortlist(app.id)} style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #7B73FF, #00D4AA)", color: "white", border: "none", borderRadius: "var(--radius-sm)", padding: "7px 14px", fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
+          <CheckCheck size={13} /> Shortlist
+        </button>
+        <button onClick={() => onReject(app.id)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", color: "#ef4444", border: "1.5px solid #ef4444", borderRadius: "var(--radius-sm)", padding: "7px 14px", fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
+          <X size={13} /> Reject
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OpenApplicationsPanel() {
+  const [applicants, setApplicants] = useState(MOCK_APPLICANTS);
+
+  const pendingCount = applicants.filter((a) => a.status === "pending").length;
+
+  function handleShortlist(id) {
+    setApplicants((prev) => prev.map((a) => a.id === id ? { ...a, status: "shortlisted" } : a));
+    showToast("Applicant shortlisted!");
+  }
+
+  function handleReject(id) {
+    setApplicants((prev) => prev.map((a) => a.id === id ? { ...a, status: "rejected" } : a));
+    showToast("Applicant removed from review", "error");
+  }
+
+  return (
+    <ProfileSection title={`Open Applications (${pendingCount} to review)`}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
+        {applicants.map((app) => (
+          <ApplicantCard key={app.id} app={app} onShortlist={handleShortlist} onReject={handleReject} />
+        ))}
+      </div>
+    </ProfileSection>
+  );
+}
+
 // ---- Company Jobs Tab ----
 function CompanyJobsTab({ jobs, onAddJob, onDeleteJob }) {
   const [showCreate, setShowCreate] = useState(false);
@@ -3574,33 +3768,7 @@ function CompanyJobsTab({ jobs, onAddJob, onDeleteJob }) {
       </ProfileSection>
 
       {/* Open Applications */}
-      <ProfileSection title={`Open Applications (${totalApplicants})`}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "28px 0",
-            gap: 10,
-          }}
-        >
-          <Users size={28} style={{ color: "var(--color-text-3)" }} />
-          <p
-            style={{
-              color: "var(--color-text-3)",
-              fontSize: "0.82rem",
-              textAlign: "center",
-              lineHeight: 1.5,
-              maxWidth: 300,
-              margin: 0,
-            }}
-          >
-            {totalApplicants === 0
-              ? "No applications yet. Post jobs and students will start applying through Hyia."
-              : `${totalApplicants} application${totalApplicants !== 1 ? "s" : ""} pending review.`}
-          </p>
-        </div>
-      </ProfileSection>
+      <OpenApplicationsPanel />
     </div>
   );
 }
@@ -4078,11 +4246,100 @@ export function MyProfile({ onViewProfile, currentUser = {}, onUpdateUser }) {
   );
 }
 
+// ---- Mentorship Request Modal ----
+function MentorshipRequestModal({ mentor, onClose, onSubmit }) {
+  const [message, setMessage] = useState("");
+  const [goals, setGoals] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleSubmit() {
+    if (!message.trim()) { showToast("Please add a message", "error"); return; }
+    setSubmitted(true);
+    onSubmit();
+    showToast(`Mentorship request sent to ${mentor.name}!`);
+  }
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="fade-in" style={{ background: "var(--color-card)", borderRadius: "var(--radius-xl)", padding: 28, width: "100%", maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+        {submitted ? (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: "3rem", marginBottom: 16 }}>🎓</div>
+            <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-text-1)", marginBottom: 8 }}>
+              Request sent!
+            </h3>
+            <p style={{ fontSize: "0.875rem", color: "var(--color-text-2)", lineHeight: 1.5, marginBottom: 20 }}>
+              <strong>{mentor.name}</strong> will review your request and get back to you within 3–5 days.
+            </p>
+            <button onClick={onClose} style={{ background: "linear-gradient(135deg, #7B73FF, #00D4AA)", color: "white", border: "none", borderRadius: "var(--radius-sm)", padding: "10px 28px", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
+              Done
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.05rem", color: "var(--color-text-1)", marginBottom: 2 }}>
+                  Request Mentorship
+                </h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--color-text-3)" }}>from {mentor.name}</p>
+              </div>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-3)", display: "flex" }}><X size={20} /></button>
+            </div>
+
+            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "var(--color-text-1)", marginBottom: 6 }}>
+              Message to {mentor.name.split(" ")[0]} <span style={{ color: "#FF6B6B" }}>*</span>
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={`Introduce yourself and explain why you'd like ${mentor.name.split(" ")[0]} as your mentor…`}
+              autoFocus
+              style={{ width: "100%", minHeight: 110, background: "var(--color-surface)", border: "1.5px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "10px 12px", color: "var(--color-text-1)", fontSize: "0.875rem", lineHeight: 1.6, resize: "vertical", fontFamily: "var(--font-body)", outline: "none", boxSizing: "border-box", marginBottom: 14 }}
+              onFocus={(e) => (e.target.style.borderColor = "#6C63FF")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+            />
+
+            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "var(--color-text-1)", marginBottom: 6 }}>
+              Your goals (optional)
+            </label>
+            <textarea
+              value={goals}
+              onChange={(e) => setGoals(e.target.value)}
+              placeholder="What do you hope to achieve through this mentorship? e.g. land an internship, improve system design skills…"
+              style={{ width: "100%", minHeight: 80, background: "var(--color-surface)", border: "1.5px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "10px 12px", color: "var(--color-text-1)", fontSize: "0.875rem", lineHeight: 1.6, resize: "vertical", fontFamily: "var(--font-body)", outline: "none", boxSizing: "border-box", marginBottom: 20 }}
+              onFocus={(e) => (e.target.style.borderColor = "#6C63FF")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+            />
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={onClose} style={{ background: "none", border: "1.5px solid var(--color-border)", color: "var(--color-text-2)", borderRadius: "var(--radius-sm)", padding: "9px 20px", cursor: "pointer", fontWeight: 500, fontSize: "0.85rem" }}>
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!message.trim()}
+                style={{ background: message.trim() ? "linear-gradient(135deg, #7B73FF, #00D4AA)" : "var(--color-border)", color: message.trim() ? "white" : "var(--color-text-3)", border: "none", borderRadius: "var(--radius-sm)", padding: "9px 24px", cursor: message.trim() ? "pointer" : "not-allowed", fontWeight: 600, fontSize: "0.85rem" }}
+              >
+                Send Request
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- Other User Profile ----
 export function OtherProfile({ profile, onBack }) {
   const [connected, setConnected] = useState(false);
   const [following, setFollowing] = useState(false);
   const [mentorRequested, setMentorRequested] = useState(false);
+  const [showMentorModal, setShowMentorModal] = useState(false);
 
   const isCompany = profile.type === "company";
   const isMentor = profile.type === "mentor";
@@ -4368,24 +4625,33 @@ export function OtherProfile({ profile, onBack }) {
             }}
           >
             {isMentor && (
-              <button
-                onClick={() => setMentorRequested((r) => !r)}
-                style={{
-                  background: mentorRequested
-                    ? "rgba(0,212,170,0.15)"
-                    : "linear-gradient(135deg, #7B73FF, #00D4AA)",
-                  color: mentorRequested ? "#00D4AA" : "white",
-                  border: mentorRequested ? "1.5px solid #00D4AA" : "none",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "10px 20px",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                {mentorRequested ? "Requested ✓" : "Request Mentorship"}
-              </button>
+              <>
+                <button
+                  onClick={() => !mentorRequested && setShowMentorModal(true)}
+                  style={{
+                    background: mentorRequested
+                      ? "rgba(0,212,170,0.15)"
+                      : "linear-gradient(135deg, #7B73FF, #00D4AA)",
+                    color: mentorRequested ? "#00D4AA" : "white",
+                    border: mentorRequested ? "1.5px solid #00D4AA" : "none",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "10px 20px",
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                    cursor: mentorRequested ? "default" : "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {mentorRequested ? "Requested ✓" : "Request Mentorship"}
+                </button>
+                {showMentorModal && (
+                  <MentorshipRequestModal
+                    mentor={profile}
+                    onClose={() => setShowMentorModal(false)}
+                    onSubmit={() => { setMentorRequested(true); setShowMentorModal(false); }}
+                  />
+                )}
+              </>
             )}
             {isCompany ? (
               <button

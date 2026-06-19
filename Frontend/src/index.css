@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-base: #0a0a14;
-  --color-surface: #13131f;
-  --color-card: #1a1a2e;
-  --color-card-hover: #1f1f35;
-  --color-border: #2a2a3e;
-  --color-border-light: #333355;
+  --color-base: #f7f7f7;
+  --color-surface: #f2f2f2;
+  --color-card: #ffffff;
+  --color-card-hover: #f9f9f9;
+  --color-border: #e5e7eb;
+  --color-border-light: #d1d5db;
   --color-primary: #6c63ff;
-  --color-primary-dim: rgba(108, 99, 255, 0.15);
-  --color-primary-dim2: rgba(108, 99, 255, 0.08);
+  --color-primary-dim: rgba(108, 99, 255, 0.1);
+  --color-primary-dim2: rgba(108, 99, 255, 0.05);
   --color-accent: #00d4aa;
-  --color-accent-dim: rgba(0, 212, 170, 0.15);
+  --color-accent-dim: rgba(0, 212, 170, 0.12);
   --color-warn: #ffb74d;
-  --color-warn-dim: rgba(255, 183, 77, 0.15);
+  --color-warn-dim: rgba(255, 183, 77, 0.12);
   --color-danger: #ff6b6b;
-  --color-text-1: #f0eff9;
-  --color-text-2: #a09ec0;
-  --color-text-3: #6a6880;
+  --color-text-1: #111111;
+  --color-text-2: #6b7280;
+  --color-text-3: #9ca3af;
 
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
@@ -82,11 +82,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: #d1d5db;
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+  background: #9ca3af;
 }
 
 /* Pulse animation */
@@ -118,4 +118,25 @@ body {
 
 .fade-in {
   animation: fadeIn 0.2s ease;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-border) 50%, var(--color-surface) 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 6px;
+}
+
+/* Mobile: hide sidebar, show bottom nav placeholder */
+@media (max-width: 767px) {
+  .main-content {
+    margin-left: 0 !important;
+    padding-bottom: 70px;
+  }
 }

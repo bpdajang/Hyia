@@ -76,6 +76,9 @@ export function CompanySignupPage({ onNavigate }) {
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
 
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail);
+  const canContinue = emailValid && companyName && industry && size && location;
+
   return (
     <AuthShell>
       <StepIndicator current={2} />
@@ -183,21 +186,28 @@ export function CompanySignupPage({ onNavigate }) {
 
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
         <GhostBtn onClick={() => onNavigate("create-account")}>← Back</GhostBtn>
-        <PrimaryBtn
-          onClick={() =>
-            onNavigate("home", {
-              companyName,
-              industry,
-              size,
-              location,
-              contactEmail,
-              website,
-              description,
-            })
-          }
+        <span
+          style={{
+            opacity: canContinue ? 1 : 0.5,
+            pointerEvents: canContinue ? "auto" : "none",
+          }}
         >
-          Finish & Enter Hyia →
-        </PrimaryBtn>
+          <PrimaryBtn
+            onClick={() =>
+              onNavigate("home", {
+                companyName,
+                industry,
+                size,
+                location,
+                contactEmail,
+                website,
+                description,
+              })
+            }
+          >
+            Finish & Enter Hyia →
+          </PrimaryBtn>
+        </span>
       </div>
     </AuthShell>
   );

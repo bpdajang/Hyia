@@ -30,6 +30,19 @@ const labelStyle = {
   marginBottom: 10,
 };
 
+const inputStyle = {
+  width: "100%",
+  background: "var(--color-surface)",
+  border: "1.5px solid var(--color-border)",
+  borderRadius: "var(--radius-md)",
+  padding: "13px 44px 13px 42px",
+  color: "var(--color-text-1)",
+  fontSize: "0.95rem",
+  fontFamily: "var(--font-body)",
+  outline: "none",
+  transition: "border-color 0.2s",
+};
+
 // ---- Step 1: Basic Info ----
 export function AlumniSignupPage({ onNavigate }) {
   const years = Array.from({ length: 35 }, (_, i) => 2024 - i);
@@ -40,6 +53,15 @@ export function AlumniSignupPage({ onNavigate }) {
   const [jobTitle, setJobTitle] = useState("");
   const [company, setCompany] = useState("");
   const [linkedin, setLinkedin] = useState("");
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const canContinue =
+    name.trim() &&
+    emailValid &&
+    university.trim() &&
+    gradYear &&
+    jobTitle.trim() &&
+    company.trim();
 
   return (
     <AuthShell>
@@ -61,6 +83,7 @@ export function AlumniSignupPage({ onNavigate }) {
             placeholder="Kwame Asante"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="Email">
@@ -69,6 +92,7 @@ export function AlumniSignupPage({ onNavigate }) {
             placeholder="kwame@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="University Attended">
@@ -77,12 +101,14 @@ export function AlumniSignupPage({ onNavigate }) {
             placeholder="e.g. KNUST, UG, GIMPA"
             value={university}
             onChange={(e) => setUniversity(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="Graduation Year">
           <select
             value={gradYear}
             onChange={(e) => setGradYear(e.target.value)}
+            style={inputStyle}
           >
             <option value="" disabled>
               Select year
@@ -100,6 +126,7 @@ export function AlumniSignupPage({ onNavigate }) {
             placeholder="e.g. Senior Software Engineer"
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="Company / Organization">
@@ -108,6 +135,7 @@ export function AlumniSignupPage({ onNavigate }) {
             placeholder="e.g. Google, MTN, Self-employed"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="LinkedIn Profile" optional fullWidth>
@@ -116,27 +144,35 @@ export function AlumniSignupPage({ onNavigate }) {
             placeholder="https://linkedin.com/in/your-name"
             value={linkedin}
             onChange={(e) => setLinkedin(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
       </div>
 
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
         <GhostBtn onClick={() => onNavigate("create-account")}>← Back</GhostBtn>
-        <PrimaryBtn
-          onClick={() =>
-            onNavigate("alumni-expertise", {
-              name,
-              email,
-              university,
-              gradYear,
-              jobTitle,
-              company,
-              linkedin,
-            })
-          }
+        <span
+          style={{
+            opacity: canContinue ? 1 : 0.5,
+            pointerEvents: canContinue ? "auto" : "none",
+          }}
         >
-          Continue →
-        </PrimaryBtn>
+          <PrimaryBtn
+            onClick={() =>
+              onNavigate("alumni-expertise", {
+                name,
+                email,
+                university,
+                gradYear,
+                jobTitle,
+                company,
+                linkedin,
+              })
+            }
+          >
+            Continue →
+          </PrimaryBtn>
+        </span>
       </div>
     </AuthShell>
   );
@@ -192,8 +228,7 @@ export function AlumniExpertisePage({ onNavigate }) {
 
   function removeSkill(name) {
     setSelected((s) => s.filter((x) => x !== name));
-    if (SUGGESTED_EXPERTISE.includes(name))
-      setSuggestions((s) => [...s, name]);
+    if (SUGGESTED_EXPERTISE.includes(name)) setSuggestions((s) => [...s, name]);
   }
 
   function handleKeyDown(e) {
@@ -205,7 +240,7 @@ export function AlumniExpertisePage({ onNavigate }) {
 
   function toggleOffering(o) {
     setOfferings((prev) =>
-      prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o]
+      prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o],
     );
   }
 
@@ -221,10 +256,20 @@ export function AlumniExpertisePage({ onNavigate }) {
       <div style={{ marginBottom: 20 }}>
         <label style={labelStyle}>Areas of expertise</label>
         <div
-          style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 10,
+          }}
         >
           {selected.map((s) => (
-            <SkillTag key={s} label={s} active onRemove={() => removeSkill(s)} />
+            <SkillTag
+              key={s}
+              label={s}
+              active
+              onRemove={() => removeSkill(s)}
+            />
           ))}
         </div>
         <input
@@ -233,7 +278,7 @@ export function AlumniExpertisePage({ onNavigate }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          style={{ marginTop: 10 }}
+          style={{ ...inputStyle, marginTop: 10 }}
         />
       </div>
 
@@ -268,6 +313,7 @@ export function AlumniExpertisePage({ onNavigate }) {
           rows={3}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
+          style={inputStyle}
         />
       </FormGroup>
 
@@ -285,6 +331,7 @@ export function AlumniExpertisePage({ onNavigate }) {
           <select
             value={availability}
             onChange={(e) => setAvailability(e.target.value)}
+            style={inputStyle}
           >
             {AVAILABILITY_OPTIONS.map((a) => (
               <option key={a} value={a}>
@@ -294,7 +341,14 @@ export function AlumniExpertisePage({ onNavigate }) {
           </select>
         </FormGroup>
         <FormGroup label="Max Mentees at a Time">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              ...inputStyle,
+            }}
+          >
             <input
               type="number"
               min={1}
@@ -302,14 +356,12 @@ export function AlumniExpertisePage({ onNavigate }) {
               value={menteeCapacity}
               onChange={(e) =>
                 setMenteeCapacity(
-                  Math.max(1, Math.min(20, Number(e.target.value)))
+                  Math.max(1, Math.min(20, Number(e.target.value))),
                 )
               }
               style={{ width: 80 }}
             />
-            <span
-              style={{ color: "var(--color-text-3)", fontSize: "0.8rem" }}
-            >
+            <span style={{ color: "var(--color-text-3)", fontSize: "0.8rem" }}>
               mentees
             </span>
           </div>

@@ -1,84 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useIsMobile } from "../../hooks/useIsMobile.js";
 import {
   Avatar,
-  SkillTag,
   SkillPill,
   FilterBar,
   SectionCard,
   SectionTitle,
   AiTag,
   PostBadge,
+  SkeletonPost,
 } from "../ui/index.jsx";
+import { showToast } from "../ui/toast.js";
 import {
   FEED_POSTS,
   SUGGESTED_CONNECTIONS,
   TRENDING,
-  CURRENT_USER,
 } from "../../data/index.js";
 import {
   Heart,
   MessageCircle,
-  Share,
-  Camera,
-  SquareMenu,
-  Video,
+  Share2,
+  Image,
   MoreHorizontal,
   MapPin,
   Clock,
   DollarSign,
+  X,
 } from "lucide-react";
 
-// ---- Left Sidebar ----
-// function LeftSidebar() {
-//   return (
-//     <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-//       {/* <ProfileCard /> */}
-//       <SuggestedCard />
-//     </aside>
-//   );
-// }
+// ── Right Sidebar ──────────────────────────────────────────────────────────────
 
-// function ProfileCard() {
-//   return (
-//     <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-//       <div style={{ height: 72, background: 'linear-gradient(135deg, rgba(108,99,255,0.25), rgba(0,212,170,0.25))' }} />
-//       <div style={{ padding: '0 20px 20px' }}>
-//         <div style={{ marginTop: -28, marginBottom: 12, border: '3px solid var(--color-card)', borderRadius: '50%', display: 'inline-block' }}>
-//           <Avatar initials="NA" color="primary" size="lg" />
-//         </div>
-//         <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--color-text-1)', marginBottom: 2 }}>
-//           {CURRENT_USER.name}
-//         </h3>
-//         <p style={{ color: '#00D4AA', fontSize: '0.8rem', fontWeight: 500, marginBottom: 8 }}>{CURRENT_USER.title}</p>
-//         <p style={{ color: 'var(--color-text-2)', fontSize: '0.8rem', lineHeight: 1.4, marginBottom: 14 }}>{CURRENT_USER.bio}</p>
-//         <div style={{ display: 'flex', gap: 20, padding: '12px 0', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', marginBottom: 14 }}>
-//           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-//             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-text-1)' }}>{CURRENT_USER.connections}</span>
-//             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-3)' }}>Connections</span>
-//           </div>
-//           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-//             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-text-1)' }}>{CURRENT_USER.endorsements}</span>
-//             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-3)' }}>Endorsements</span>
-//           </div>
-//         </div>
-//         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-//           {[{ icon: 'li', label: 'LinkedIn' }, { icon: 'gh', label: 'GitHub' }].map(l => (
-//             <a key={l.label} href="#"
-//               style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-2)', borderRadius: 20, padding: '5px 12px', fontSize: '0.75rem', textDecoration: 'none', transition: 'all 0.2s' }}
-//               onMouseEnter={e => { e.currentTarget.style.borderColor = '#6C63FF'; e.currentTarget.style.color = '#6C63FF'; }}
-//               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-2)'; }}
-//             >
-//               {l.label}
-//             </a>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// ---- Right Sidebar ----
-function RightSidebar({ onViewProfile }) {
+function RightSidebar({ onViewProfile, onTagFilter }) {
   return (
     <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <SectionCard>
@@ -87,7 +39,23 @@ function RightSidebar({ onViewProfile }) {
           {TRENDING.map((t) => (
             <div
               key={t.num}
-              style={{ display: "flex", alignItems: "center", gap: 10 }}
+              onClick={() => onTagFilter(t.tag)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                cursor: "pointer",
+                borderRadius: 6,
+                padding: "4px 6px",
+                margin: "-4px -6px",
+                transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "var(--color-surface)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
             >
               <span
                 style={{
@@ -181,6 +149,9 @@ function RightSidebar({ onViewProfile }) {
               transition: "all 0.2s",
               width: "100%",
             }}
+            onClick={() =>
+              showToast("Mentorship request sent to Dr. Kwame Asante!")
+            }
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "#00D4AA";
               e.currentTarget.style.color = "var(--color-base)";
@@ -194,6 +165,7 @@ function RightSidebar({ onViewProfile }) {
           </button>
         </div>
       </SectionCard>
+
       <SuggestedCard onViewProfile={onViewProfile} />
     </aside>
   );
@@ -243,7 +215,7 @@ function SuggestedCard({ onViewProfile }) {
                 {p.meta}
               </div>
             </div>
-            <ConnectBtn />
+            <ConnectBtn name={p.name} />
           </div>
         ))}
       </div>
@@ -251,9 +223,55 @@ function SuggestedCard({ onViewProfile }) {
   );
 }
 
-// ---- Feed ----
-function Feed({ onNavigate, onViewProfile }) {
-  const [filter, setFilter] = useState("All");
+// ── Feed ───────────────────────────────────────────────────────────────────────
+
+function Feed({
+  activeTab,
+  onTabChange,
+  onNavigate,
+  onViewProfile,
+  currentUser,
+  filter,
+  setFilter,
+  tagSearch,
+  onClearTag,
+}) {
+  const [posts, setPosts] = useState(FEED_POSTS);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Tag search words extracted from camelCase tag (e.g. #AfricanAI → ["african","ai"])
+  function matchesTagSearch(post) {
+    if (!tagSearch) return true;
+    const words =
+      tagSearch
+        .toLowerCase()
+        .replace("#", "")
+        .match(/[a-z]+/g) || [];
+    return words.some(
+      (word) =>
+        post.tags.some((t) => t.toLowerCase().includes(word)) ||
+        post.body.toLowerCase().includes(word),
+    );
+  }
+
+  const filtered = posts.filter((post) => {
+    if (tagSearch) return matchesTagSearch(post);
+    if (filter === "All") return true;
+    if (filter === "Projects") return !!post.project;
+    if (filter === "Opportunities") return !!post.opportunity;
+    if (filter === "Research") return !post.project && !post.opportunity;
+    return true;
+  });
+
+  function handleNewPost(post) {
+    setPosts((prev) => [post, ...prev]);
+  }
 
   return (
     <main
@@ -276,8 +294,38 @@ function Feed({ onNavigate, onViewProfile }) {
           gap: 12,
         }}
       >
-        <Avatar initials="NA" size="sm" color="primary" />
         <button
+          onClick={() => onTabChange("profile")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: activeTab === "profile" ? "#f3f4f6" : "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "10px 12px",
+            borderRadius: 10,
+            width: "15%",
+            transition: "background 0.15s",
+            textAlign: "left",
+          }}
+          onMouseEnter={(e) => {
+            if (activeTab !== "profile")
+              e.currentTarget.style.background = "#f9fafb";
+          }}
+          onMouseLeave={(e) => {
+            if (activeTab !== "profile")
+              e.currentTarget.style.background = "transparent";
+          }}
+        >
+          <Avatar
+            initials={currentUser?.initials || "NA"}
+            size="sm"
+            color="primary"
+          />
+        </button>
+        <button
+          onClick={() => setShowModal(true)}
           style={{
             flex: 1,
             background: "var(--color-surface)",
@@ -301,69 +349,182 @@ function Feed({ onNavigate, onViewProfile }) {
         >
           Share a project, insight, or update…
         </button>
-
-        <Camera
+        <Image
+          size={20}
           style={{
             color: "var(--color-text-3)",
-            hover: { color: "var(--color-primary)" },
             cursor: "pointer",
+            flexShrink: 0,
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "#6C63FF";
-            e.currentTarget.style.color = "var(--color-text-2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-border)";
-            e.currentTarget.style.color = "var(--color-text-3)";
-          }}
-        />
-        <Video
-          style={{
-            color: "var(--color-text-3)",
-            hover: { color: "var(--color-primary)" },
-            cursor: "pointer",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "#6C63FF";
-            e.currentTarget.style.color = "var(--color-text-2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-border)";
-            e.currentTarget.style.color = "var(--color-text-3)";
-          }}
-        />
-
-        <SquareMenu
-          style={{
-            color: "var(--color-text-3)",
-            hover: { color: "var(--color-primary)" },
-            cursor: "pointer",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "#6C63FF";
-            e.currentTarget.style.color = "var(--color-text-2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-border)";
-            e.currentTarget.style.color = "var(--color-text-3)";
-          }}
+          onClick={() => setShowModal(true)}
         />
       </div>
 
-      <FilterBar
-        filters={["All", "Projects", "Research", "Opportunities"]}
-        active={filter}
-        onChange={setFilter}
-      />
+      {/* Active tag filter chip */}
+      {tagSearch && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 14px",
+            background: "rgba(108,99,255,0.07)",
+            border: "1px solid rgba(108,99,255,0.2)",
+            borderRadius: "var(--radius-sm)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "0.82rem",
+              color: "#6C63FF",
+              fontWeight: 500,
+              flex: 1,
+            }}
+          >
+            Showing posts for {tagSearch}
+          </span>
+          <button
+            onClick={onClearTag}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#6C63FF",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: "0.78rem",
+              padding: 0,
+            }}
+          >
+            <X size={13} /> Clear
+          </button>
+        </div>
+      )}
 
-      {FEED_POSTS.map((post) => (
-        <PostCard key={post.id} post={post} onNavigate={onNavigate} onViewProfile={onViewProfile} />
-      ))}
+      {/* Filter bar — hidden when tag search is active */}
+      {!tagSearch && (
+        <FilterBar
+          filters={["All", "Projects", "Research", "Opportunities"]}
+          active={filter}
+          onChange={setFilter}
+        />
+      )}
+
+      {loading ? (
+        [1, 2, 3].map((n) => <SkeletonPost key={n} />)
+      ) : filtered.length === 0 ? (
+        <EmptyFeed
+          filter={filter}
+          tagSearch={tagSearch}
+          onClear={tagSearch ? onClearTag : () => setFilter("All")}
+        />
+      ) : (
+        filtered.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onNavigate={onNavigate}
+            onViewProfile={onViewProfile}
+          />
+        ))
+      )}
+
+      {showModal && (
+        <PostModal
+          currentUser={currentUser}
+          onClose={() => setShowModal(false)}
+          onPost={handleNewPost}
+        />
+      )}
     </main>
   );
 }
 
+// ── Empty State ────────────────────────────────────────────────────────────────
+
+function EmptyFeed({ filter, tagSearch, onClear }) {
+  const label = tagSearch
+    ? `"${tagSearch}"`
+    : filter === "All"
+      ? "feed"
+      : filter.toLowerCase();
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        padding: "48px 20px",
+        background: "var(--color-card)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+      }}
+    >
+      <div style={{ fontSize: "2rem", marginBottom: 12 }}>📭</div>
+      <div
+        style={{
+          fontWeight: 600,
+          fontSize: "1rem",
+          color: "var(--color-text-1)",
+          marginBottom: 8,
+        }}
+      >
+        No posts found
+      </div>
+      <div
+        style={{
+          fontSize: "0.85rem",
+          color: "var(--color-text-3)",
+          marginBottom: 16,
+        }}
+      >
+        {tagSearch
+          ? `No posts matched the tag ${tagSearch}.`
+          : filter === "All"
+            ? "Be the first to share something with your network."
+            : `Nothing tagged as ${filter} has been posted yet.`}
+      </div>
+      {(filter !== "All" || tagSearch) && (
+        <button
+          onClick={onClear}
+          style={{
+            background: "rgba(108,99,255,0.1)",
+            color: "#6C63FF",
+            border: "1.5px solid #6C63FF",
+            borderRadius: "var(--radius-sm)",
+            padding: "7px 20px",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          View all posts
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Post Card ──────────────────────────────────────────────────────────────────
+
 function PostCard({ post, onNavigate, onViewProfile }) {
+  const [liked, setLiked] = useState(false);
+  const [clapsCount, setClapsCount] = useState(post.claps);
+
+  function handleLike() {
+    const next = !liked;
+    setLiked(next);
+    setClapsCount((c) => (next ? c + 1 : c - 1));
+    if (next) showToast("👏 Clapped!");
+  }
+
+  function handleShare() {
+    showToast("🔗 Link copied to clipboard!");
+  }
+
+  function handleComment() {
+    showToast("💬 Comment threads coming in Phase 3!");
+  }
+
   return (
     <article
       style={{
@@ -380,6 +541,7 @@ function PostCard({ post, onNavigate, onViewProfile }) {
         (e.currentTarget.style.borderColor = "var(--color-border)")
       }
     >
+      {/* Author row */}
       <div
         style={{
           display: "flex",
@@ -409,8 +571,12 @@ function PostCard({ post, onNavigate, onViewProfile }) {
             <span
               onClick={() => onViewProfile && onViewProfile(post.profileId)}
               style={{ cursor: "pointer" }}
-              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.textDecoration = "underline")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.textDecoration = "none")
+              }
             >
               {post.author}
             </span>
@@ -434,13 +600,14 @@ function PostCard({ post, onNavigate, onViewProfile }) {
             cursor: "pointer",
             padding: 4,
             display: "flex",
-            alignItems: "center",
           }}
+          onClick={() => showToast("Options coming soon")}
         >
           <MoreHorizontal size={18} />
         </button>
       </div>
 
+      {/* Body */}
       <div
         style={{
           color: "var(--color-text-1)",
@@ -451,6 +618,7 @@ function PostCard({ post, onNavigate, onViewProfile }) {
         dangerouslySetInnerHTML={{ __html: post.body }}
       />
 
+      {/* Project card */}
       {post.project && (
         <div
           style={{
@@ -489,8 +657,9 @@ function PostCard({ post, onNavigate, onViewProfile }) {
             </div>
           </div>
           <button
+            onClick={() => showToast("Full project view coming in Phase 3!")}
             style={{
-              background: "rgba(108,99,255,0.15)",
+              background: "rgba(108,99,255,0.1)",
               color: "#6C63FF",
               border: "1px solid #6C63FF",
               borderRadius: "var(--radius-sm)",
@@ -506,6 +675,7 @@ function PostCard({ post, onNavigate, onViewProfile }) {
         </div>
       )}
 
+      {/* Opportunity card */}
       {post.opportunity && (
         <div
           style={{
@@ -522,13 +692,37 @@ function PostCard({ post, onNavigate, onViewProfile }) {
           }}
         >
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "var(--color-text-2)" }}>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.78rem",
+                color: "var(--color-text-2)",
+              }}
+            >
               <MapPin size={12} /> {post.opportunity.location}
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "var(--color-text-2)" }}>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.78rem",
+                color: "var(--color-text-2)",
+              }}
+            >
               <Clock size={12} /> {post.opportunity.duration}
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "var(--color-text-2)" }}>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.78rem",
+                color: "var(--color-text-2)",
+              }}
+            >
               <DollarSign size={12} /> {post.opportunity.pay}
             </span>
           </div>
@@ -546,11 +740,12 @@ function PostCard({ post, onNavigate, onViewProfile }) {
               whiteSpace: "nowrap",
             }}
           >
-            Apply Now
+            View Opportunity
           </button>
         </div>
       )}
 
+      {/* Tags — clicking filters feed */}
       {post.tags.length > 0 && (
         <div
           style={{
@@ -563,6 +758,7 @@ function PostCard({ post, onNavigate, onViewProfile }) {
           {post.tags.map((t) => (
             <span
               key={t}
+              onClick={() => showToast(`Filtering by ${t}`)}
               style={{
                 color: "#6C63FF",
                 fontSize: "0.78rem",
@@ -575,6 +771,7 @@ function PostCard({ post, onNavigate, onViewProfile }) {
         </div>
       )}
 
+      {/* Engagement row */}
       <div
         style={{
           display: "flex",
@@ -583,91 +780,328 @@ function PostCard({ post, onNavigate, onViewProfile }) {
           borderTop: "1px solid var(--color-border)",
         }}
       >
-        {[
-          {
-            key: "claps",
-            content: (
-              <>
-                <Heart size={16} /> {post.claps}
-              </>
-            ),
-          },
-          {
-            key: "comments",
-            content: (
-              <>
-                <MessageCircle size={16} /> {post.comments} comments
-              </>
-            ),
-          },
-          {
-            key: "share",
-            content: (
-              <>
-                <Share size={16} /> Share
-              </>
-            ),
-          },
-        ].map(({ key, content }) => (
-          <button
-            key={key}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--color-text-3)",
-              padding: "6px 12px",
-              borderRadius: "var(--radius-sm)",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--color-surface)";
-              e.currentTarget.style.color = "var(--color-text-1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "none";
-              e.currentTarget.style.color = "var(--color-text-3)";
-            }}
-          >
-            {content}
-          </button>
-        ))}
+        <EngageBtn
+          onClick={handleLike}
+          active={liked}
+          activeColor="#6C63FF"
+          icon={<Heart size={16} fill={liked ? "#6C63FF" : "none"} />}
+          label={`${clapsCount}`}
+        />
+        <EngageBtn
+          onClick={handleComment}
+          icon={<MessageCircle size={16} />}
+          label={`${post.comments} comments`}
+        />
+        <EngageBtn
+          onClick={handleShare}
+          icon={<Share2 size={16} />}
+          label="Share"
+        />
       </div>
     </article>
   );
 }
 
-// ---- Main Export ----
-export default function HomeTab({ onNavigate, onViewProfile }) {
+function EngageBtn({ onClick, icon, label, active, activeColor }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "none",
+        border: "none",
+        color: active ? activeColor : "var(--color-text-3)",
+        padding: "6px 12px",
+        borderRadius: "var(--radius-sm)",
+        cursor: "pointer",
+        fontSize: "0.8rem",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        transition: "all 0.15s",
+        fontWeight: active ? 600 : 400,
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "var(--color-surface)";
+          e.currentTarget.style.color = "var(--color-text-1)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "none";
+          e.currentTarget.style.color = "var(--color-text-3)";
+        }
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+// ── Post Creation Modal ────────────────────────────────────────────────────────
+
+function PostModal({ currentUser, onClose, onPost }) {
+  const [body, setBody] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState([]);
+
+  function handleTagKey(e) {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      const raw = tagInput.trim();
+      const tag = raw.startsWith("#") ? raw : `#${raw}`;
+      if (!tags.includes(tag)) setTags((prev) => [...prev, tag]);
+      setTagInput("");
+    }
+  }
+
+  function removeTag(tag) {
+    setTags((prev) => prev.filter((t) => t !== tag));
+  }
+
+  function handleSubmit() {
+    if (!body.trim()) return;
+    const role = currentUser?.role;
+    onPost({
+      id: Date.now(),
+      profileId: null,
+      initials: currentUser?.initials || "U",
+      author: currentUser?.name || "You",
+      badge:
+        role === "alumni"
+          ? "Mentor"
+          : role === "company"
+            ? "Company"
+            : "Student",
+      badgeType:
+        role === "alumni"
+          ? "mentor"
+          : role === "company"
+            ? "company"
+            : "student",
+      meta: "Just now",
+      color: "primary",
+      body: body.replace(/\n/g, "<br>"),
+      tags,
+      claps: 0,
+      comments: 0,
+    });
+    showToast("Post shared with your network!");
+    onClose();
+  }
+
   return (
     <div
       style={{
-        maxWidth: 1200,
-        margin: "0 auto",
-        padding: "28px 20px",
-        display: "grid",
-        gridTemplateColumns: "1fr 280px",
-        gap: 24,
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.35)",
+        zIndex: 500,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
       }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* <LeftSidebar /> */}
-      <Feed onNavigate={onNavigate} onViewProfile={onViewProfile} />
-      <RightSidebar onViewProfile={onViewProfile} />
+      <div
+        className="fade-in"
+        style={{
+          background: "var(--color-card)",
+          borderRadius: "var(--radius-xl)",
+          padding: 24,
+          width: "100%",
+          maxWidth: 540,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 18,
+          }}
+        >
+          <Avatar
+            initials={currentUser?.initials || "U"}
+            size="md"
+            color="primary"
+          />
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: "0.9rem",
+                color: "var(--color-text-1)",
+              }}
+            >
+              {currentUser?.name || "You"}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>
+              Share with your network
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--color-text-3)",
+              padding: 4,
+              display: "flex",
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Share a project, insight, or update…"
+          autoFocus
+          style={{
+            width: "100%",
+            minHeight: 140,
+            background: "var(--color-surface)",
+            border: "1.5px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            padding: "12px 14px",
+            color: "var(--color-text-1)",
+            fontSize: "0.9rem",
+            lineHeight: 1.6,
+            resize: "vertical",
+            fontFamily: "var(--font-body)",
+            marginBottom: 12,
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = "#6C63FF")}
+          onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+        />
+
+        {tags.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+              marginBottom: 10,
+            }}
+          >
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "rgba(108,99,255,0.1)",
+                  color: "#6C63FF",
+                  borderRadius: 20,
+                  padding: "3px 10px",
+                  fontSize: "0.78rem",
+                }}
+              >
+                {tag}
+                <button
+                  onClick={() => removeTag(tag)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "inherit",
+                    cursor: "pointer",
+                    fontSize: "0.95rem",
+                    padding: 0,
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <input
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={handleTagKey}
+          placeholder="Add a tag and press Enter (e.g. fintech)"
+          style={{
+            width: "100%",
+            background: "var(--color-surface)",
+            border: "1.5px solid var(--color-border)",
+            borderRadius: "var(--radius-sm)",
+            padding: "8px 12px",
+            color: "var(--color-text-1)",
+            fontSize: "0.85rem",
+            fontFamily: "var(--font-body)",
+            outline: "none",
+            marginBottom: 18,
+            boxSizing: "border-box",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = "#6C63FF")}
+          onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+        />
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "1.5px solid var(--color-border)",
+              color: "var(--color-text-2)",
+              borderRadius: "var(--radius-sm)",
+              padding: "8px 20px",
+              cursor: "pointer",
+              fontWeight: 500,
+              fontSize: "0.85rem",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!body.trim()}
+            style={{
+              background: body.trim()
+                ? "linear-gradient(135deg, #7B73FF, #00D4AA)"
+                : "var(--color-border)",
+              color: body.trim() ? "white" : "var(--color-text-3)",
+              border: "none",
+              borderRadius: "var(--radius-sm)",
+              padding: "8px 26px",
+              cursor: body.trim() ? "pointer" : "not-allowed",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              transition: "opacity 0.2s",
+            }}
+          >
+            Post
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function ConnectBtn() {
+// ── Connect Button ─────────────────────────────────────────────────────────────
+
+function ConnectBtn({ name }) {
   const [connected, setConnected] = useState(false);
   return (
     <button
-      onClick={() => setConnected((c) => !c)}
+      onClick={() => {
+        const next = !connected;
+        setConnected(next);
+        showToast(next ? `Connected with ${name}!` : "Connection removed");
+      }}
       style={{
-        background: connected ? "#6C63FF" : "rgba(108,99,255,0.15)",
+        background: connected ? "#6C63FF" : "rgba(108,99,255,0.12)",
         color: connected ? "white" : "#6C63FF",
         border: "1.5px solid #6C63FF",
         borderRadius: 20,
@@ -681,5 +1115,117 @@ function ConnectBtn() {
     >
       {connected ? "Connected ✓" : "Connect"}
     </button>
+  );
+}
+
+// ── Main Export ────────────────────────────────────────────────────────────────
+
+export default function HomeTab({ onNavigate, onViewProfile, currentUser }) {
+  const [filter, setFilter] = useState("All");
+  const [tagSearch, setTagSearch] = useState(null);
+  const [activeTab, setActiveTab] = useState("feeds");
+  const isMobile = useIsMobile(900);
+
+  function handleTagFilter(tag) {
+    setTagSearch(tag);
+    setFilter("All");
+    if (isMobile) setActiveTab("feeds");
+  }
+
+  function clearTag() {
+    setTagSearch(null);
+  }
+
+  if (isMobile) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+        {/* Tab bar */}
+        <div
+          style={{
+            display: "flex",
+            borderBottom: "1px solid var(--color-border)",
+            background: "var(--color-base)",
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }}
+        >
+          {["feeds", "suggested"].map((tab) => {
+            const active = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  flex: 1,
+                  background: "none",
+                  border: "none",
+                  borderBottom: active
+                    ? "2.5px solid #6C63FF"
+                    : "2.5px solid transparent",
+                  color: active ? "#6C63FF" : "var(--color-text-3)",
+                  fontWeight: active ? 700 : 500,
+                  fontSize: "0.9rem",
+                  padding: "13px 0",
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                  letterSpacing: "0.01em",
+                  transition: "color 0.15s, border-color 0.15s",
+                }}
+              >
+                {tab === "feeds" ? "Feeds" : "Suggested"}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab content */}
+        <div style={{ padding: "16px 16px 24px" }}>
+          {activeTab === "feeds" ? (
+            <Feed
+              onNavigate={onNavigate}
+              onViewProfile={onViewProfile}
+              currentUser={currentUser}
+              filter={filter}
+              setFilter={setFilter}
+              tagSearch={tagSearch}
+              onClearTag={clearTag}
+            />
+          ) : (
+            <RightSidebar
+              onViewProfile={onViewProfile}
+              onTagFilter={handleTagFilter}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: "28px 20px",
+        display: "grid",
+        gridTemplateColumns: "1fr 280px",
+        gap: 24,
+      }}
+    >
+      <Feed
+        onNavigate={onNavigate}
+        onViewProfile={onViewProfile}
+        currentUser={currentUser}
+        filter={filter}
+        setFilter={setFilter}
+        tagSearch={tagSearch}
+        onClearTag={clearTag}
+      />
+      <RightSidebar
+        onViewProfile={onViewProfile}
+        onTagFilter={handleTagFilter}
+      />
+    </div>
   );
 }
