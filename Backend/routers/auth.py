@@ -48,14 +48,14 @@ async def register(body: RegisterRequest):
 
 # ─── Login ────────────────────────────────────────────────────────────────────
 
-from fastapi.security import OAuth2PasswordRequestForm
+# from fastapi.security import OAuth2PasswordRequestForm
 
 @router.post("/login", response_model=TokenResponse)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(body: LoginRequest):
     db = get_db()
 
-    user = await db.users.find_one({"email": form_data.username})
-    if not user or not verify_password(form_data.password, user["hashed_password"]):
+    user = await db.users.find_one({"email": body.email})
+    if not user or not verify_password(body.password, user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

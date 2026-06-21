@@ -3,6 +3,7 @@ import { useNetworkCanvas } from "../hooks/useNetworkCanvas.js";
 import { Logo } from "../components/ui/index.jsx";
 import { Mail, Lock } from "lucide-react";
 import { showToast } from "../components/ui/toast.js";
+import { login } from "../api/auth.js";
 
 const labelStyle = {
   display: "block",
@@ -31,9 +32,11 @@ export default function SignInPage({ onNavigate }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const canSubmit = emailValid && password.length > 0;
+  const canSubmit = emailValid && password.length > 0 && !loading;
 
   function focusBorder(e) {
     e.currentTarget.style.borderColor = "#6C63FF";
@@ -42,9 +45,18 @@ export default function SignInPage({ onNavigate }) {
     e.currentTarget.style.borderColor = "var(--color-border)";
   }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    if (canSubmit) onNavigate("home", { email });
+    if (!canSubmit) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await login(email, password);
+      onNavigate("home", { _loginRole: data.role, _loginUserId: data.user_id });
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   }
 
   return (
@@ -143,11 +155,17 @@ export default function SignInPage({ onNavigate }) {
               </div>
             </div>
 
+            {error && (
+              <p style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: 8, marginBottom: 0 }}>
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={!canSubmit}
               style={{
-                marginTop: 24,
+                marginTop: 16,
                 width: "100%",
                 background: "linear-gradient(135deg, #7B73FF, #00D4AA)",
                 color: "white",
@@ -162,7 +180,7 @@ export default function SignInPage({ onNavigate }) {
                 transition: "all 0.2s",
               }}
             >
-              Sign in
+              {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
 

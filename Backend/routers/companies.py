@@ -26,8 +26,8 @@ async def update_my_profile(
     if body.name is not None:
         updates["name"] = body.name
 
-    profile_fields = ["company_name", "company_type", "year_established",
-                      "phone", "website", "location"]
+    profile_fields = ["company_name", "industry", "size", "location",
+                      "phone", "contact_email", "website", "description"]
     for field in profile_fields:
         val = getattr(body, field)
         if val is not None:

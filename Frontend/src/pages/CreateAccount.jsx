@@ -183,7 +183,7 @@ export default function CreateAccountPage({ role, onNavigate }) {
             pointerEvents: canContinue ? "auto" : "none",
           }}
         >
-          <PrimaryBtn onClick={() => onNavigate(target, { email })}>
+          <PrimaryBtn onClick={() => onNavigate(target, { email, password })}>
             Next →
           </PrimaryBtn>
         </span>

@@ -133,6 +133,10 @@ body {
   border-radius: 6px;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Mobile: hide sidebar, show bottom nav placeholder */
 @media (max-width: 767px) {
   .main-content {

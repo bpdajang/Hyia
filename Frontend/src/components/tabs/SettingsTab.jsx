@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { User, Bell, Lock, Shield, Eye, EyeOff, Check, ChevronRight } from "lucide-react";
+import { User, Bell, Lock, Shield, Eye, EyeOff, Check, LogOut } from "lucide-react";
 import { Avatar } from "../ui/index.jsx";
 import { showToast } from "../ui/toast.js";
+import { updateMyProfile } from "../../api/auth.js";
 
 // ── Section wrapper ────────────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ function SettingsInput({ label, value, onChange, type = "text", placeholder, rea
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
-export default function SettingsTab({ currentUser, onUpdateUser }) {
+export default function SettingsTab({ currentUser, onUpdateUser, onLogout }) {
   const user = currentUser || {};
   const [activeSection, setActiveSection] = useState("account");
 
@@ -140,12 +141,18 @@ export default function SettingsTab({ currentUser, onUpdateUser }) {
     showToast("Privacy setting updated");
   }
 
-  function saveProfile() {
+  async function saveProfile() {
     if (!displayName.trim()) { showToast("Name cannot be empty", "error"); return; }
-    onUpdateUser?.({ name: displayName.trim(), bio });
-    setNameSaved(true);
-    setTimeout(() => setNameSaved(false), 2500);
-    showToast("Profile updated!");
+    try {
+      const role = user.role || "student";
+      await updateMyProfile(role, { name: displayName.trim(), bio });
+      onUpdateUser?.({ name: displayName.trim(), bio });
+      setNameSaved(true);
+      setTimeout(() => setNameSaved(false), 2500);
+      showToast("Profile updated!");
+    } catch (err) {
+      showToast(err.message || "Failed to save profile", "error");
+    }
   }
 
   function changePassword() {
@@ -198,6 +205,32 @@ export default function SettingsTab({ currentUser, onUpdateUser }) {
               {s.icon} {s.label}
             </button>
           ))}
+
+          <div style={{ borderTop: "1px solid var(--color-border)", marginTop: 8, paddingTop: 8 }}>
+            <button
+              onClick={onLogout}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                width: "100%",
+                background: "none",
+                color: "#ef4444",
+                border: "none",
+                borderRadius: "var(--radius-sm)",
+                padding: "10px 12px",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                textAlign: "left",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+            >
+              <LogOut size={16} /> Sign out
+            </button>
+          </div>
         </div>
 
         {/* Content */}

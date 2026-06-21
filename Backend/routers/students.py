@@ -28,8 +28,8 @@ async def update_my_profile(
         updates["name"] = body.name
 
     # Profile sub-document fields
-    profile_fields = ["department", "program", "year", "skills", "github",
-                      "linkedin", "companies", "projects_completed"]
+    profile_fields = ["university", "course", "year", "skills", "bio",
+                      "github", "linkedin", "companies", "projects_completed"]
     for field in profile_fields:
         val = getattr(body, field)
         if val is not None:
