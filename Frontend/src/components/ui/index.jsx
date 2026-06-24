@@ -1,6 +1,14 @@
-// ============================================
-// HYIA — Shared UI Components
-// ============================================
+import hyiaLogo from "../../assets/Hyia_logo1.png";
+
+export function Logo({ height = 80 }) {
+  return (
+    <img
+      src={hyiaLogo}
+      alt="Hyia"
+      style={{ height, width: "auto", display: "block" }}
+    />
+  );
+}
 
 const COLOR_MAP = {
   primary: { bg: "rgba(108,99,255,0.15)", text: "#6C63FF" },
@@ -45,48 +53,6 @@ export function Avatar({
       }}
     >
       {initials}
-    </div>
-  );
-}
-
-export function LogoMark({ small = false }) {
-  return (
-    <div
-      style={{
-        width: small ? 20 : 28,
-        height: small ? 18 : 26,
-        background: "linear-gradient(135deg, #7B73FF, #00D4AA)",
-        display: "flex",
-        borderRadius: 4,
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "var(--font-display)",
-        fontWeight: 700,
-        fontSize: small ? "0.9rem" : "1.1rem",
-        color: "white",
-        flexShrink: 0,
-      }}
-    >
-      a
-    </div>
-  );
-}
-
-export function Logo({ small = false }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: small ? 1 : 3 }}>
-      <span
-        style={{
-          fontFamily: "var(--font-display)",
-          fontSize: small ? "1.1rem" : "1.4rem",
-          fontWeight: 700,
-          color: "var(--color-text-1)",
-          letterSpacing: "-0.5px",
-        }}
-      >
-        Hyi
-      </span>
-      <LogoMark small={small} />
     </div>
   );
 }
@@ -293,15 +259,38 @@ export function Skeleton({ width = "100%", height = 16, style = {} }) {
 
 export function SkeletonPost() {
   return (
-    <div style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 18 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+    <div
+      style={{
+        background: "var(--color-card)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        padding: 18,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 14,
+        }}
+      >
         <Skeleton width={42} height={42} style={{ borderRadius: "50%" }} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
+        <div
+          style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}
+        >
           <Skeleton width="40%" height={13} />
           <Skeleton width="60%" height={11} />
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          marginBottom: 14,
+        }}
+      >
         <Skeleton width="100%" height={13} />
         <Skeleton width="95%" height={13} />
         <Skeleton width="80%" height={13} />
@@ -317,25 +306,56 @@ export function SkeletonPost() {
 
 export function SkeletonPeopleCard() {
   return (
-    <div style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: "20px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+    <div
+      style={{
+        background: "var(--color-card)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        padding: "20px 16px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
       <Skeleton width={56} height={56} style={{ borderRadius: "50%" }} />
       <Skeleton width="70%" height={13} />
       <Skeleton width="85%" height={11} />
-      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 5,
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
+      >
         <Skeleton width={48} height={22} style={{ borderRadius: 12 }} />
         <Skeleton width={52} height={22} style={{ borderRadius: 12 }} />
       </div>
-      <Skeleton width={90} height={30} style={{ borderRadius: 20, marginTop: 4 }} />
+      <Skeleton
+        width={90}
+        height={30}
+        style={{ borderRadius: 20, marginTop: 4 }}
+      />
     </div>
   );
 }
 
 export function SkeletonOppCard() {
   return (
-    <div style={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)", padding: 16 }}>
+    <div
+      style={{
+        background: "var(--color-card)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        padding: 16,
+      }}
+    >
       <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
         <Skeleton width={36} height={36} style={{ borderRadius: 8 }} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div
+          style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}
+        >
           <Skeleton width="55%" height={13} />
           <Skeleton width="40%" height={11} />
         </div>

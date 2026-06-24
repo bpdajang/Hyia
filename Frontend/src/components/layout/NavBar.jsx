@@ -1,4 +1,4 @@
-import { Logo, Avatar } from "../ui/index.jsx";
+import { Avatar } from "../ui/index.jsx";
 import {
   House,
   Users,
@@ -50,7 +50,7 @@ export function SideNav({ activeTab, onTabChange, currentUser, onSearch }) {
     >
       {/* Logo */}
       <div style={{ padding: "0 12px 20px" }}>
-        <Logo />
+        <img src="" />
       </div>
 
       {/* Search button */}

@@ -348,8 +348,8 @@ export default function App() {
     return <AlumniSignupPage onNavigate={navigate} />;
   if (page === "alumni-expertise")
     return <AlumniExpertisePage onNavigate={navigate} />;
-  if (page === "company-signup")
-    return <CompanySignupPage onNavigate={navigate} />;
+  if (page === "company-page-create")
+    return <CompanySignupPage inApp onNavigate={navigate} />;
 
   // Main app
   return (
@@ -446,6 +446,7 @@ export default function App() {
                   currentUser={user}
                   onUpdateUser={updateUser}
                   onLogout={logout}
+                  onNavigate={navigate}
                 />
               </ErrorBoundary>
             )}

@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { Logo, SkillTag } from "../components/ui/index.jsx";
 
-// ---- Shared step indicator ----
+const inputStyle = {
+  width: "100%",
+  background: "var(--color-surface)",
+  border: "1.5px solid var(--color-border)",
+  borderRadius: "var(--radius-md)",
+  padding: "10px 14px",
+  color: "var(--color-text-1)",
+  fontSize: "0.9rem",
+  fontFamily: "var(--font-body)",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
 export function StepIndicator({ current }) {
   return (
     <div style={{ display: "flex", alignItems: "center", marginBottom: 28 }}>
@@ -110,6 +122,7 @@ export function StudentSignupPage({ onNavigate }) {
             placeholder="e.g. Nana Ama Adwubi"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="Email">
@@ -118,6 +131,7 @@ export function StudentSignupPage({ onNavigate }) {
             placeholder="you@university.edu.gh"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="University">
@@ -126,6 +140,7 @@ export function StudentSignupPage({ onNavigate }) {
             placeholder="e.g. KNUST, UG, UCC"
             value={university}
             onChange={(e) => setUniversity(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="Course / Programme">
@@ -134,10 +149,15 @@ export function StudentSignupPage({ onNavigate }) {
             placeholder="e.g. BSc Computer Science"
             value={course}
             onChange={(e) => setCourse(e.target.value)}
+            style={inputStyle}
           />
         </FormGroup>
         <FormGroup label="Year of Study">
-          <select value={year} onChange={(e) => setYear(e.target.value)}>
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            style={inputStyle}
+          >
             {["Year 1", "Year 2", "Year 3", "Year 4"].map((y) => (
               <option key={y}>{y}</option>
             ))}
@@ -149,7 +169,13 @@ export function StudentSignupPage({ onNavigate }) {
         <GhostBtn onClick={() => onNavigate("create-account")}>← Back</GhostBtn>
         <PrimaryBtn
           onClick={() =>
-            onNavigate("student-skills", { name, email, university, course, year })
+            onNavigate("student-skills", {
+              name,
+              email,
+              university,
+              course,
+              year,
+            })
           }
         >
           Continue →
@@ -243,7 +269,7 @@ export function StudentSkillsPage({ onNavigate }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          style={{ marginTop: 10 }}
+          style={{ ...inputStyle, marginTop: 10 }}
         />
       </div>
 
@@ -261,6 +287,7 @@ export function StudentSkillsPage({ onNavigate }) {
           placeholder="Tell the Hyia community a bit about yourself and your goals…"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
+          style={inputStyle}
         />
       </FormGroup>
 
@@ -273,7 +300,9 @@ export function StudentSkillsPage({ onNavigate }) {
         }}
       >
         <GhostBtn onClick={() => onNavigate("student-signup")}>← Back</GhostBtn>
-        <PrimaryBtn onClick={() => onNavigate("home", { skills: selected, bio })}>
+        <PrimaryBtn
+          onClick={() => onNavigate("home", { skills: selected, bio })}
+        >
           Finish & Enter Hyia →
         </PrimaryBtn>
       </div>

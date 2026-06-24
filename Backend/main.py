@@ -15,6 +15,7 @@ from routers.opportunities import router as opportunities_router
 from routers.messages import router as messages_router
 from routers.notifications import router as notifications_router
 from routers.mentorship import router as mentorship_router
+from routers.company_pages import router as company_pages_router
 
 
 @asynccontextmanager
@@ -25,7 +26,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="CampusBridge API",
+    title="Hyia API",
     description="Intelligent Academic-Industry Social Network",
     version="1.0.0",
     lifespan=lifespan,
@@ -50,6 +51,7 @@ app.include_router(opportunities_router, prefix=PREFIX)
 app.include_router(mentorship_router, prefix=PREFIX)
 app.include_router(messages_router, prefix=PREFIX)
 app.include_router(notifications_router, prefix=PREFIX)
+app.include_router(company_pages_router, prefix=PREFIX)
 
 
 @app.get("/", tags=["Health"])

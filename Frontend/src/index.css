@@ -55,7 +55,7 @@ body {
 
 /* Gradient utilities */
 .gradient-text {
-  background: linear-gradient(135deg, #6c63ff, #00d4aa);
+  background: linear-gradient(135deg, #000000, #7b8180);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -122,19 +122,30 @@ body {
 
 /* Skeleton shimmer */
 @keyframes shimmer {
-  0% { background-position: -600px 0; }
-  100% { background-position: 600px 0; }
+  0% {
+    background-position: -600px 0;
+  }
+  100% {
+    background-position: 600px 0;
+  }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-border) 50%, var(--color-surface) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border) 50%,
+    var(--color-surface) 75%
+  );
   background-size: 1200px 100%;
   animation: shimmer 1.6s infinite linear;
   border-radius: 6px;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Mobile: hide sidebar, show bottom nav placeholder */

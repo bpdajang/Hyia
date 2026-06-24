@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { User, Bell, Lock, Shield, Eye, EyeOff, Check, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Bell, Lock, Shield, Eye, EyeOff, Check, LogOut, Building2, Trash2 } from "lucide-react";
 import { Avatar } from "../ui/index.jsx";
 import { showToast } from "../ui/toast.js";
 import { updateMyProfile } from "../../api/auth.js";
+import { getMyCompanyPages, deleteCompanyPage } from "../../api/companyPages.js";
 
 // ── Section wrapper ────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ function SettingsInput({ label, value, onChange, type = "text", placeholder, rea
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
-export default function SettingsTab({ currentUser, onUpdateUser, onLogout }) {
+export default function SettingsTab({ currentUser, onUpdateUser, onLogout, onNavigate }) {
   const user = currentUser || {};
   const [activeSection, setActiveSection] = useState("account");
 
@@ -111,6 +112,30 @@ export default function SettingsTab({ currentUser, onUpdateUser, onLogout }) {
   const [confirmPw, setConfirmPw] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+
+  // Company pages
+  const [companyPages, setCompanyPages] = useState([]);
+  const [pagesLoading, setPagesLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeSection !== "account") return;
+    setPagesLoading(true);
+    getMyCompanyPages()
+      .then(setCompanyPages)
+      .catch(() => {})
+      .finally(() => setPagesLoading(false));
+  }, [activeSection]);
+
+  async function handleDeletePage(pageId, pageName) {
+    if (!window.confirm(`Delete "${pageName}"? This cannot be undone.`)) return;
+    try {
+      await deleteCompanyPage(pageId);
+      setCompanyPages((prev) => prev.filter((p) => p.id !== pageId));
+      showToast("Company page deleted");
+    } catch (err) {
+      showToast(err.message || "Failed to delete company page", "error");
+    }
+  }
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState({
@@ -273,6 +298,63 @@ export default function SettingsTab({ currentUser, onUpdateUser, onLogout }) {
                 >
                   {nameSaved ? <><Check size={15} /> Saved</> : "Save changes"}
                 </button>
+              </Section>
+
+              <Section title="Company Pages">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: companyPages.length ? 16 : 0 }}>
+                  <div>
+                    <div style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-1)", marginBottom: 3 }}>Create a Company Page</div>
+                    <div style={{ fontSize: "0.78rem", color: "var(--color-text-3)" }}>Represent your organization on Hyia. Post opportunities, showcase your culture, and connect with talent.</div>
+                  </div>
+                  <button
+                    onClick={() => onNavigate?.("company-page-create")}
+                    style={{ flexShrink: 0, background: "linear-gradient(135deg, #7B73FF, #00D4AA)", color: "white", border: "none", borderRadius: "var(--radius-sm)", padding: "8px 18px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                  >
+                    + Create Page
+                  </button>
+                </div>
+
+                {pagesLoading && (
+                  <p style={{ fontSize: "0.8rem", color: "var(--color-text-3)", margin: 0 }}>Loading…</p>
+                )}
+
+                {!pagesLoading && companyPages.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {companyPages.map((page) => (
+                      <div
+                        key={page.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          background: "var(--color-surface)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: "var(--radius-md)",
+                          padding: "12px 16px",
+                        }}
+                      >
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(108,99,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Building2 size={18} color="#6C63FF" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-1)", marginBottom: 2 }}>{page.company_name}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>
+                            {[page.industry, page.location].filter(Boolean).join(" · ") || "Company Page"}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeletePage(page.id, page.company_name)}
+                          title="Delete company page"
+                          style={{ background: "none", border: "none", color: "var(--color-text-3)", cursor: "pointer", padding: 4, display: "flex", borderRadius: 6 }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-3)"; e.currentTarget.style.background = "none"; }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Section>
 
               <Section title="Danger zone">

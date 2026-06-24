@@ -8,6 +8,8 @@ import {
   GhostBtn,
 } from "./StudentOnboarding.jsx";
 import { Phone } from "lucide-react";
+import { showToast } from "../components/ui/toast.js";
+import { createCompanyPage } from "../api/companyPages.js";
 
 const h1Style = {
   fontFamily: "var(--font-display)",
@@ -66,7 +68,7 @@ const COMPANY_SIZES = [
   "500+ employees",
 ];
 
-export function CompanySignupPage({ onNavigate }) {
+export function CompanySignupPage({ onNavigate, inApp = false }) {
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
   const [size, setSize] = useState("");
@@ -76,13 +78,34 @@ export function CompanySignupPage({ onNavigate }) {
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
 
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail);
-  const canContinue = emailValid && companyName && industry && size && location;
+  const [submitting, setSubmitting] = useState(false);
 
-  return (
-    <AuthShell>
-      <StepIndicator current={2} />
-      <h1 style={h1Style}>Tell us about your company</h1>
+  const emailValid = !contactEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail);
+  const canContinue = companyName && industry && size && location && emailValid && !submitting;
+
+  async function handleDone() {
+    if (inApp) {
+      setSubmitting(true);
+      try {
+        await createCompanyPage({ companyName, industry, size, location, phone, contactEmail, website, description });
+        showToast("Company page created!", "success");
+        onNavigate("settings");
+      } catch (err) {
+        showToast(err.message || "Failed to create company page", "error");
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      onNavigate("home", { companyName, industry, size, location, contactEmail, website, description });
+    }
+  }
+
+  const content = (
+    <>
+      {!inApp && <StepIndicator current={2} />}
+      <h1 style={inApp ? { ...h1Style, fontSize: "1.4rem" } : h1Style}>
+        {inApp ? "Create a Company Page" : "Tell us about your company"}
+      </h1>
       <p style={subStyle}>
         Help students and alumni discover who you are and what you stand for.
       </p>
@@ -185,32 +208,30 @@ export function CompanySignupPage({ onNavigate }) {
       </div>
 
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-        <GhostBtn onClick={() => onNavigate("create-account")}>← Back</GhostBtn>
+        <GhostBtn onClick={() => onNavigate(inApp ? "settings" : "create-account")}>← Back</GhostBtn>
         <span
           style={{
             opacity: canContinue ? 1 : 0.5,
             pointerEvents: canContinue ? "auto" : "none",
           }}
         >
-          <PrimaryBtn
-            onClick={() =>
-              onNavigate("home", {
-                companyName,
-                industry,
-                size,
-                location,
-                contactEmail,
-                website,
-                description,
-              })
-            }
-          >
-            Finish & Enter Hyia →
+          <PrimaryBtn onClick={handleDone}>
+            {inApp ? (submitting ? "Creating…" : "Create Company Page") : "Finish & Enter Hyia →"}
           </PrimaryBtn>
         </span>
       </div>
-    </AuthShell>
+    </>
   );
+
+  if (inApp) {
+    return (
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 20px" }} className="fade-in">
+        {content}
+      </div>
+    );
+  }
+
+  return <AuthShell>{content}</AuthShell>;
 }
 
 // // ---- Step 2: Hiring Preferences ----
