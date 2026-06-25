@@ -11,3 +11,7 @@ export async function getThread(userId) {
 export async function sendMessage(userId, content) {
   return apiRequest("POST", `/messages/${userId}`, { content });
 }
+
+export async function getUnreadMessageCount() {
+  return apiRequest("GET", "/messages/unread/count");
+}

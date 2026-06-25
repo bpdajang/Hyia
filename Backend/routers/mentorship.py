@@ -55,16 +55,34 @@ async def send_request(
         "updated_at": None,
     }
     result = await db.mentorship_requests.insert_one(doc)
+    request_id = str(result.inserted_id)
+
+    # Open a message thread so the student and alumni can communicate
+    await db.messages.insert_one({
+        "sender_id": current_user["id"],
+        "receiver_id": alumni_id,
+        "content": f"[Mentorship Request]\n\n{body.message}",
+        "read": False,
+        "created_at": datetime.utcnow(),
+    })
 
     # Notify alumni
     await create_notification(
         user_id=alumni_id,
         type=NotificationType.mentorship_request,
         content=f"{current_user['name']} sent you a mentorship request",
-        meta={"from_id": current_user["id"], "from_name": current_user["name"], "request_id": str(result.inserted_id)},
+        meta={"from_id": current_user["id"], "from_name": current_user["name"], "request_id": request_id},
     )
 
-    return {"message": "Mentorship request sent", "request_id": str(result.inserted_id)}
+    # Confirm to student
+    await create_notification(
+        user_id=current_user["id"],
+        type=NotificationType.mentorship_request,
+        content=f"Your mentorship request to {alumni['name']} is pending review",
+        meta={"to_id": alumni_id, "to_name": alumni["name"], "request_id": request_id},
+    )
+
+    return {"message": "Mentorship request sent", "request_id": request_id}
 
 
 @router.patch("/{request_id}/respond")

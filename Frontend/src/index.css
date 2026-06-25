@@ -53,6 +53,14 @@ body {
   min-height: 100vh;
 }
 
+/* Post highlight formatting */
+mark {
+  background: rgba(255, 212, 59, 0.4);
+  border-radius: 2px;
+  padding: 0 2px;
+  color: inherit;
+}
+
 /* Gradient utilities */
 .gradient-text {
   background: linear-gradient(135deg, #000000, #7b8180);

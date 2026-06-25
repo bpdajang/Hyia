@@ -34,6 +34,8 @@ import { PROFILES, CURRENT_USER as DEFAULT_USER } from "./data/index.js";
 // API
 import { getToken, clearToken } from "./api/client.js";
 import { register, login, getMe, getMyProfile, updateMyProfile } from "./api/auth.js";
+import { getUnreadMessageCount } from "./api/messages.js";
+import { getUnreadNotificationCount } from "./api/notifications.js";
 import { showToast } from "./components/ui/toast.js";
 
 function getInitials(name) {
@@ -168,6 +170,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const isMobile = useIsMobile();
 
@@ -188,6 +192,18 @@ export default function App() {
         setPage("signup");
       });
   }, []);
+
+  // Fetch and poll unread counts once the user is logged in
+  useEffect(() => {
+    if (!currentUser) return;
+    function fetchCounts() {
+      getUnreadMessageCount().then((r) => setUnreadMessages(r.unread_count ?? 0)).catch(() => {});
+      getUnreadNotificationCount().then((r) => setUnreadNotifications(r.unread_count ?? 0)).catch(() => {});
+    }
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 30000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   // Cmd/Ctrl+K → open search
   useEffect(() => {
@@ -263,14 +279,21 @@ export default function App() {
       setPage("home");
       setActiveTab(target);
       setViewingProfile(null);
+      if (target === "messages") setUnreadMessages(0);
+      if (target === "notifications") setUnreadNotifications(0);
       window.scrollTo({ top: 0, behavior: "instant" });
     } else {
       setPage(target);
     }
   }
 
-  function viewProfile(profileId) {
-    const profile = PROFILES[profileId];
+  function viewProfile(profileOrId) {
+    if (profileOrId && typeof profileOrId === "object") {
+      setViewingProfile(profileOrId);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
+    const profile = PROFILES[profileOrId];
     if (profile) {
       setViewingProfile(profile);
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -367,6 +390,8 @@ export default function App() {
           onTabChange={(tab) => navigate(tab)}
           currentUser={user}
           onSearch={() => setShowSearch(true)}
+          unreadMessages={unreadMessages}
+          unreadNotifications={unreadNotifications}
         />
       )}
 
@@ -411,7 +436,7 @@ export default function App() {
             )}
             {activeTab === "circle" && (
               <ErrorBoundary>
-                <CircleTab onViewProfile={viewProfile} />
+                <CircleTab onViewProfile={viewProfile} currentUser={user} />
               </ErrorBoundary>
             )}
             {activeTab === "opportunities" && (
@@ -421,9 +446,7 @@ export default function App() {
             )}
             {activeTab === "messages" && (
               <ErrorBoundary>
-                <div style={{ height: "100vh" }}>
-                  <MessagesTab currentUser={user} />
-                </div>
+                <MessagesTab currentUser={user} />
               </ErrorBoundary>
             )}
             {activeTab === "notifications" && (
@@ -456,7 +479,12 @@ export default function App() {
 
       {/* Bottom nav — mobile only */}
       {isMobile && (
-        <BottomNav activeTab={activeTab} onTabChange={(tab) => navigate(tab)} />
+        <BottomNav
+          activeTab={activeTab}
+          onTabChange={(tab) => navigate(tab)}
+          unreadMessages={unreadMessages}
+          unreadNotifications={unreadNotifications}
+        />
       )}
     </div>
   );

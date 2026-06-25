@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { Avatar, SkillTag, SkillPill } from "../ui/index.jsx";
 import { showToast } from "../ui/toast.js";
+import { getConnections, getMyMentorshipRequests, getMyMentees } from "../../api/network.js";
 
 const PROJECT_ICON_MAP = {
   CreditCard,
@@ -858,7 +859,7 @@ function AlumniEditModal({ currentUser, onSave, onClose }) {
 }
 
 // ---- Alumni About Tab ----
-function AlumniAboutTab({ user }) {
+function AlumniAboutTab({ user, menteeCount = 0 }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 20 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -1048,7 +1049,7 @@ function AlumniAboutTab({ user }) {
               label="Mentee capacity"
               value={`${user.menteeCapacity ?? 3} slots`}
             />
-            <StatRow label="Active mentees" value="0" />
+            <StatRow label="Active mentees" value={menteeCount} />
           </div>
         </ProfileSection>
       </div>
@@ -1208,34 +1209,69 @@ function MenteeRequestCard({ req, onApprove, onDecline }) {
 }
 
 function AlumniPeopleTab({ onViewProfile }) {
-  const [requests, setRequests] = useState(MOCK_MENTEE_REQUESTS);
+  const [connections, setConnections] = useState([]);
+  const [mentees, setMentees] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const pendingCount = requests.filter((r) => r.status === "pending").length;
-  const activeCount = requests.filter((r) => r.status === "approved").length;
+  useEffect(() => {
+    Promise.all([
+      getConnections().catch(() => []),
+      getMyMentees().catch(() => []),
+    ]).then(([conns, ment]) => {
+      setConnections(conns);
+      setMentees(ment);
+      setLoading(false);
+    });
+  }, []);
 
-  function handleApprove(id) {
-    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "approved" } : r));
-    showToast("Mentee request accepted!");
+  function getInitials(name = "") {
+    return name.trim().split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
   }
 
-  function handleDecline(id) {
-    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "declined" } : r));
-    showToast("Request declined", "error");
+  function getRoleLabel(u) {
+    const p = u.profile || {};
+    if (u.role === "student") return [p.course, p.university].filter(Boolean).join(" · ") || "Student";
+    if (u.role === "alumni") return [p.job_title, p.current_company].filter(Boolean).join(" · ") || "Alumni";
+    return p.industry || "Company";
   }
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      <ProfileSection title="Connections (0)">
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
-          <Users size={30} style={{ color: "var(--color-text-3)" }} />
-          <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 220, margin: 0 }}>
-            No connections yet. Connect with students and peers on Hyia.
-          </p>
-        </div>
+      <ProfileSection title={`Connections (${connections.length})`}>
+        {loading ? (
+          <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", padding: "12px 0" }}>Loading…</p>
+        ) : connections.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
+            <Users size={30} style={{ color: "var(--color-text-3)" }} />
+            <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 220, margin: 0 }}>
+              No connections yet. Connect with students and peers on Hyia.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {connections.map((u) => (
+              <div
+                key={u.id}
+                onClick={() => onViewProfile && onViewProfile({ id: u.id, name: u.name, role: u.role, initials: getInitials(u.name), title: getRoleLabel(u), type: u.role === "alumni" ? "mentor" : u.role === "student" ? "student" : "company", connections: 0, bio: (u.profile || {}).bio || "" })}
+                style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", borderRadius: "var(--radius-sm)", padding: "6px 8px", margin: "-6px -8px", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-surface)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Avatar initials={getInitials(u.name)} color={u.role === "alumni" ? "accent" : "primary"} size="xs" />
+                <div>
+                  <div style={{ fontWeight: 500, fontSize: "0.83rem", color: "var(--color-text-1)" }}>{u.name}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>{getRoleLabel(u)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </ProfileSection>
 
-      <ProfileSection title={`Mentee Requests${pendingCount > 0 ? ` (${pendingCount} pending)` : activeCount > 0 ? ` (${activeCount} active)` : " (0)"}`}>
-        {requests.length === 0 ? (
+      <ProfileSection title={`Active Mentees (${mentees.length})`}>
+        {loading ? (
+          <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", padding: "12px 0" }}>Loading…</p>
+        ) : mentees.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
             <GraduationCap size={30} style={{ color: "var(--color-text-3)" }} />
             <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 220, margin: 0 }}>
@@ -1243,9 +1279,18 @@ function AlumniPeopleTab({ onViewProfile }) {
             </p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
-            {requests.map((req) => (
-              <MenteeRequestCard key={req.id} req={req} onApprove={handleApprove} onDecline={handleDecline} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {mentees.map((req) => (
+              <div
+                key={req.id}
+                style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(0,212,170,0.06)", border: "1.5px solid #00D4AA", borderRadius: "var(--radius-md)", padding: "10px 14px" }}
+              >
+                <Avatar initials={getInitials(req.student_name)} color="primary" size="xs" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--color-text-1)" }}>{req.student_name}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#00D4AA", fontWeight: 600 }}>Active mentee ✓</div>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -1260,8 +1305,15 @@ function AlumniMyProfile({ onViewProfile, currentUser, onUpdateUser }) {
   const [editing, setEditing] = useState(false);
   const [coverImg, setCoverImg] = useState(null);
   const [profileImg, setProfileImg] = useState(null);
+  const [connectionCount, setConnectionCount] = useState(currentUser?.connections ?? 0);
+  const [menteeCount, setMenteeCount] = useState(0);
   const coverRef = useRef();
   const photoRef = useRef();
+
+  useEffect(() => {
+    getConnections().then((list) => setConnectionCount(list.length)).catch(() => {});
+    getMyMentees().then((list) => setMenteeCount(list.length)).catch(() => {});
+  }, []);
 
   function handleCoverChange(e) {
     const file = e.target.files[0];
@@ -1471,11 +1523,11 @@ function AlumniMyProfile({ onViewProfile, currentUser, onUpdateUser }) {
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <Users size={13} /> {currentUser.connections ?? 0} connections
+                <Users size={13} /> {connectionCount} connections
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <GraduationCap size={13} />{" "}
-                {currentUser.menteeCapacity ?? 3} mentee slots
+                {menteeCount} / {currentUser.menteeCapacity ?? 3} mentees
               </span>
               {currentUser.university && (
                 <span
@@ -1581,7 +1633,7 @@ function AlumniMyProfile({ onViewProfile, currentUser, onUpdateUser }) {
       </div>
 
       {/* Tab content */}
-      {activeTab === "about" && <AlumniAboutTab user={currentUser} />}
+      {activeTab === "about" && <AlumniAboutTab user={currentUser} menteeCount={menteeCount} />}
       {activeTab === "posts" && <AlumniPostsTab />}
       {activeTab === "people" && (
         <AlumniPeopleTab onViewProfile={onViewProfile} />
@@ -2207,81 +2259,91 @@ function StudentPostsTab() {
 
 // ---- Student People Tab ----
 function StudentPeopleTab({ onViewProfile }) {
+  const [connections, setConnections] = useState([]);
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      getConnections().catch(() => []),
+      getMyMentorshipRequests().catch(() => []),
+    ]).then(([conns, reqs]) => {
+      setConnections(conns);
+      setMentors(reqs.filter((r) => r.status === "accepted"));
+      setLoading(false);
+    });
+  }, []);
+
+  function getInitials(name = "") {
+    return name.trim().split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
+  }
+
+  function getRoleLabel(u) {
+    const p = u.profile || {};
+    if (u.role === "student") return [p.course, p.university].filter(Boolean).join(" · ") || "Student";
+    if (u.role === "alumni") return [p.job_title, p.current_company].filter(Boolean).join(" · ") || "Alumni";
+    return p.industry || "Company";
+  }
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-      <ProfileSection title="Connections (0)">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "28px 0",
-            gap: 10,
-          }}
-        >
-          <Users size={30} style={{ color: "var(--color-text-3)" }} />
-          <p
-            style={{
-              color: "var(--color-text-3)",
-              fontSize: "0.82rem",
-              textAlign: "center",
-              lineHeight: 1.5,
-              maxWidth: 200,
-              margin: 0,
-            }}
-          >
-            No connections yet. Explore the circle to connect with peers and
-            alumni.
-          </p>
-        </div>
-      </ProfileSection>
-
-      <ProfileSection title="Mentors">
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {MENTORS.map((m) => (
-            <div
-              key={m.name}
-              onClick={() => onViewProfile && onViewProfile(m.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: "pointer",
-                borderRadius: "var(--radius-sm)",
-                padding: "4px 6px",
-                margin: "-4px -6px",
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "var(--color-surface)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "transparent")
-              }
-            >
-              <Avatar initials={m.initials} color={m.color} size="xs" />
-              <div>
-                <div
-                  style={{
-                    fontWeight: 500,
-                    fontSize: "0.83rem",
-                    color: "var(--color-text-1)",
-                  }}
-                >
-                  {m.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "var(--color-text-3)",
-                  }}
-                >
-                  {m.title}
+      <ProfileSection title={`Connections (${connections.length})`}>
+        {loading ? (
+          <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", padding: "12px 0" }}>Loading…</p>
+        ) : connections.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
+            <Users size={30} style={{ color: "var(--color-text-3)" }} />
+            <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 200, margin: 0 }}>
+              No connections yet. Explore the circle to connect with peers and alumni.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {connections.map((u) => (
+              <div
+                key={u.id}
+                onClick={() => onViewProfile && onViewProfile({ id: u.id, name: u.name, role: u.role, initials: getInitials(u.name), title: getRoleLabel(u), type: u.role === "alumni" ? "mentor" : u.role === "student" ? "student" : "company", connections: 0, bio: (u.profile || {}).bio || "" })}
+                style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", borderRadius: "var(--radius-sm)", padding: "6px 8px", margin: "-6px -8px", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-surface)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Avatar initials={getInitials(u.name)} color={u.role === "alumni" ? "accent" : "primary"} size="xs" />
+                <div>
+                  <div style={{ fontWeight: 500, fontSize: "0.83rem", color: "var(--color-text-1)" }}>{u.name}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>{getRoleLabel(u)}</div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+      </ProfileSection>
+
+      <ProfileSection title={`Mentors (${mentors.length})`}>
+        {loading ? (
+          <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", padding: "12px 0" }}>Loading…</p>
+        ) : mentors.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0", gap: 10 }}>
+            <GraduationCap size={30} style={{ color: "var(--color-text-3)" }} />
+            <p style={{ color: "var(--color-text-3)", fontSize: "0.82rem", textAlign: "center", lineHeight: 1.5, maxWidth: 200, margin: 0 }}>
+              No mentors yet. Request mentorship from alumni on the platform.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {mentors.map((req) => (
+              <div
+                key={req.id}
+                style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(0,212,170,0.06)", border: "1.5px solid #00D4AA", borderRadius: "var(--radius-md)", padding: "10px 14px" }}
+              >
+                <Avatar initials={getInitials(req.alumni_name)} color="accent" size="xs" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--color-text-1)" }}>{req.alumni_name}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#00D4AA", fontWeight: 600 }}>Your mentor ✓</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </ProfileSection>
     </div>
   );
@@ -2294,8 +2356,13 @@ function StudentMyProfile({ onViewProfile, currentUser, onUpdateUser }) {
   const [coverImg, setCoverImg] = useState(null);
   const [profileImg, setProfileImg] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [connectionCount, setConnectionCount] = useState(currentUser?.connections ?? 0);
   const coverRef = useRef();
   const photoRef = useRef();
+
+  useEffect(() => {
+    getConnections().then((list) => setConnectionCount(list.length)).catch(() => {});
+  }, []);
 
   function handleCoverChange(e) {
     const file = e.target.files[0];
@@ -2503,7 +2570,7 @@ function StudentMyProfile({ onViewProfile, currentUser, onUpdateUser }) {
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <Users size={13} /> {currentUser.connections ?? 0} connections
+                <Users size={13} /> {connectionCount} connections
               </span>
               {currentUser.university && (
                 <span

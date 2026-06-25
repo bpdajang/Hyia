@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useIsMobile } from "../../hooks/useIsMobile.js";
 import {
   Avatar,
@@ -26,6 +26,10 @@ import {
   Clock,
   DollarSign,
   X,
+  AtSign,
+  Highlighter,
+  Bold,
+  Trash2,
 } from "lucide-react";
 
 // ── Right Sidebar ──────────────────────────────────────────────────────────────
@@ -613,10 +617,58 @@ function PostCard({ post, onNavigate, onViewProfile }) {
           color: "var(--color-text-1)",
           fontSize: "0.875rem",
           lineHeight: 1.6,
-          marginBottom: 12,
+          marginBottom: post.mentions?.length > 0 ? 6 : 12,
         }}
         dangerouslySetInnerHTML={{ __html: post.body }}
       />
+
+      {/* @Mentions */}
+      {post.mentions?.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+          {post.mentions.map((m) => (
+            <span
+              key={m}
+              style={{
+                color: "#00D4AA",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+              onClick={() => showToast(`Profile view for ${m} coming soon!`)}
+            >
+              {m}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Images */}
+      {post.images?.length > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: post.images.length === 1 ? "1fr" : "repeat(2, 1fr)",
+            gap: 4,
+            borderRadius: "var(--radius-md)",
+            overflow: "hidden",
+            marginBottom: 12,
+          }}
+        >
+          {post.images.map((url, i) => (
+            <img
+              key={i}
+              src={url}
+              alt="Post image"
+              style={{
+                width: "100%",
+                height: post.images.length === 1 ? 280 : 160,
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Project card */}
       {post.project && (
@@ -845,6 +897,11 @@ function PostModal({ currentUser, onClose, onPost }) {
   const [body, setBody] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState([]);
+  const [mentionInput, setMentionInput] = useState("");
+  const [mentions, setMentions] = useState([]);
+  const [images, setImages] = useState([]);
+  const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   function handleTagKey(e) {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -858,6 +915,43 @@ function PostModal({ currentUser, onClose, onPost }) {
 
   function removeTag(tag) {
     setTags((prev) => prev.filter((t) => t !== tag));
+  }
+
+  function handleMentionKey(e) {
+    if (e.key === "Enter" && mentionInput.trim()) {
+      e.preventDefault();
+      const raw = mentionInput.trim();
+      const mention = raw.startsWith("@") ? raw : `@${raw}`;
+      if (!mentions.includes(mention)) setMentions((prev) => [...prev, mention]);
+      setMentionInput("");
+    }
+  }
+
+  function removeMention(m) {
+    setMentions((prev) => prev.filter((x) => x !== m));
+  }
+
+  function handleImageUpload(e) {
+    const files = Array.from(e.target.files || []);
+    const next = files
+      .slice(0, 4 - images.length)
+      .map((f) => ({ url: URL.createObjectURL(f), name: f.name }));
+    setImages((prev) => [...prev, ...next].slice(0, 4));
+    e.target.value = "";
+  }
+
+  function removeImage(idx) {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function wrapSelection(open, close) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    if (start === end) return;
+    const selected = body.substring(start, end);
+    setBody(body.substring(0, start) + open + selected + close + body.substring(end));
   }
 
   function handleSubmit() {
@@ -884,12 +978,48 @@ function PostModal({ currentUser, onClose, onPost }) {
       color: "primary",
       body: body.replace(/\n/g, "<br>"),
       tags,
+      mentions,
+      images: images.map((i) => i.url),
       claps: 0,
       comments: 0,
     });
     showToast("Post shared with your network!");
     onClose();
   }
+
+  const chipStyle = (color) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+    background: color === "purple" ? "rgba(108,99,255,0.1)" : "rgba(0,212,170,0.1)",
+    color: color === "purple" ? "#6C63FF" : "#00D4AA",
+    borderRadius: 20,
+    padding: "3px 10px",
+    fontSize: "0.78rem",
+  });
+
+  const chipBtnStyle = {
+    background: "none",
+    border: "none",
+    color: "inherit",
+    cursor: "pointer",
+    fontSize: "0.95rem",
+    padding: 0,
+    lineHeight: 1,
+  };
+
+  const inputStyle = {
+    width: "100%",
+    background: "var(--color-surface)",
+    border: "1.5px solid var(--color-border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "8px 12px",
+    color: "var(--color-text-1)",
+    fontSize: "0.85rem",
+    fontFamily: "var(--font-body)",
+    outline: "none",
+    boxSizing: "border-box",
+  };
 
   return (
     <div
@@ -912,10 +1042,13 @@ function PostModal({ currentUser, onClose, onPost }) {
           borderRadius: "var(--radius-xl)",
           padding: 24,
           width: "100%",
-          maxWidth: 540,
+          maxWidth: 560,
+          maxHeight: "90vh",
+          overflowY: "auto",
           boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
         }}
       >
+        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -958,14 +1091,16 @@ function PostModal({ currentUser, onClose, onPost }) {
           </button>
         </div>
 
+        {/* Textarea */}
         <textarea
+          ref={textareaRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Share a project, insight, or update…"
           autoFocus
           style={{
             width: "100%",
-            minHeight: 140,
+            minHeight: 130,
             background: "var(--color-surface)",
             border: "1.5px solid var(--color-border)",
             borderRadius: "var(--radius-md)",
@@ -975,7 +1110,6 @@ function PostModal({ currentUser, onClose, onPost }) {
             lineHeight: 1.6,
             resize: "vertical",
             fontFamily: "var(--font-body)",
-            marginBottom: 12,
             outline: "none",
             boxSizing: "border-box",
           }}
@@ -983,71 +1117,182 @@ function PostModal({ currentUser, onClose, onPost }) {
           onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
         />
 
-        {tags.length > 0 && (
-          <div
+        {/* Formatting toolbar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            padding: "6px 0",
+            marginBottom: 10,
+            borderBottom: "1px solid var(--color-border)",
+          }}
+        >
+          <span style={{ fontSize: "0.72rem", color: "var(--color-text-3)", marginRight: 4 }}>
+            Format:
+          </span>
+          <button
+            title="Bold selected text"
+            onClick={() => wrapSelection("<strong>", "</strong>")}
             style={{
               display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-              marginBottom: 10,
+              alignItems: "center",
+              gap: 4,
+              background: "none",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+              padding: "4px 8px",
+              cursor: "pointer",
+              color: "var(--color-text-2)",
+              fontSize: "0.75rem",
+              fontWeight: 600,
             }}
           >
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  background: "rgba(108,99,255,0.1)",
-                  color: "#6C63FF",
-                  borderRadius: 20,
-                  padding: "3px 10px",
-                  fontSize: "0.78rem",
-                }}
+            <Bold size={13} /> Bold
+          </button>
+          <button
+            title="Highlight selected text"
+            onClick={() => wrapSelection("<mark>", "</mark>")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              background: "none",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+              padding: "4px 8px",
+              cursor: "pointer",
+              color: "var(--color-text-2)",
+              fontSize: "0.75rem",
+            }}
+          >
+            <Highlighter size={13} /> Highlight
+          </button>
+          <div style={{ flex: 1 }} />
+          <button
+            title="Add photos (max 4)"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={images.length >= 4}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              background: images.length >= 4 ? "var(--color-surface)" : "rgba(108,99,255,0.08)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 6,
+              padding: "4px 10px",
+              cursor: images.length >= 4 ? "not-allowed" : "pointer",
+              color: images.length >= 4 ? "var(--color-text-3)" : "#6C63FF",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+            }}
+          >
+            <Image size={13} />
+            {images.length > 0 ? `${images.length}/4` : "Photo"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={handleImageUpload}
+          />
+        </div>
+
+        {/* Image previews */}
+        {images.length > 0 && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: images.length === 1 ? "1fr" : "repeat(2, 1fr)",
+              gap: 6,
+              marginBottom: 12,
+            }}
+          >
+            {images.map((img, idx) => (
+              <div
+                key={idx}
+                style={{ position: "relative", borderRadius: "var(--radius-sm)", overflow: "hidden" }}
               >
-                {tag}
-                <button
-                  onClick={() => removeTag(tag)}
+                <img
+                  src={img.url}
+                  alt={img.name}
                   style={{
-                    background: "none",
+                    width: "100%",
+                    height: images.length === 1 ? 200 : 120,
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+                <button
+                  onClick={() => removeImage(idx)}
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    background: "rgba(0,0,0,0.55)",
                     border: "none",
-                    color: "inherit",
+                    borderRadius: "50%",
+                    width: 24,
+                    height: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     cursor: "pointer",
-                    fontSize: "0.95rem",
-                    padding: 0,
-                    lineHeight: 1,
+                    color: "white",
                   }}
                 >
-                  ×
+                  <X size={12} />
                 </button>
-              </span>
+              </div>
             ))}
           </div>
         )}
 
+        {/* Hashtags */}
+        {tags.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+            {tags.map((tag) => (
+              <span key={tag} style={chipStyle("purple")}>
+                {tag}
+                <button onClick={() => removeTag(tag)} style={chipBtnStyle}>×</button>
+              </span>
+            ))}
+          </div>
+        )}
         <input
           value={tagInput}
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleTagKey}
-          placeholder="Add a tag and press Enter (e.g. fintech)"
-          style={{
-            width: "100%",
-            background: "var(--color-surface)",
-            border: "1.5px solid var(--color-border)",
-            borderRadius: "var(--radius-sm)",
-            padding: "8px 12px",
-            color: "var(--color-text-1)",
-            fontSize: "0.85rem",
-            fontFamily: "var(--font-body)",
-            outline: "none",
-            marginBottom: 18,
-            boxSizing: "border-box",
-          }}
+          placeholder="# Add a hashtag and press Enter (e.g. fintech)"
+          style={{ ...inputStyle, marginBottom: 10 }}
           onFocus={(e) => (e.target.style.borderColor = "#6C63FF")}
           onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
         />
 
+        {/* Mentions */}
+        {mentions.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+            {mentions.map((m) => (
+              <span key={m} style={chipStyle("teal")}>
+                {m}
+                <button onClick={() => removeMention(m)} style={chipBtnStyle}>×</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <input
+          value={mentionInput}
+          onChange={(e) => setMentionInput(e.target.value)}
+          onKeyDown={handleMentionKey}
+          placeholder="@ Tag someone and press Enter (e.g. Emmanuel)"
+          style={{ ...inputStyle, marginBottom: 18 }}
+          onFocus={(e) => (e.target.style.borderColor = "#00D4AA")}
+          onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+        />
+
+        {/* Actions */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
           <button
             onClick={onClose}

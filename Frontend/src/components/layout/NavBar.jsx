@@ -9,29 +9,40 @@ import {
   Search,
 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { id: "home", label: "Home", icon: <House size={20} /> },
-  { id: "circle", label: "My Circle", icon: <Users size={20} /> },
-  {
-    id: "opportunities",
-    label: "Opportunities",
-    icon: <BriefcaseBusiness size={20} />,
-  },
-  {
-    id: "messages",
-    label: "Messages",
-    badge: 3,
-    icon: <MessageCircle size={20} />,
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    badge: 5,
-    icon: <Bell size={20} />,
-  },
-];
+function buildNavItems(unreadMessages, unreadNotifications) {
+  return [
+    { id: "home", label: "Home", icon: <House size={20} /> },
+    { id: "circle", label: "My Circle", icon: <Users size={20} /> },
+    {
+      id: "opportunities",
+      label: "Opportunities",
+      icon: <BriefcaseBusiness size={20} />,
+    },
+    {
+      id: "messages",
+      label: "Messages",
+      badge: unreadMessages,
+      icon: <MessageCircle size={20} />,
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      badge: unreadNotifications,
+      icon: <Bell size={20} />,
+    },
+  ];
+}
 
-export function SideNav({ activeTab, onTabChange, currentUser, onSearch }) {
+export function SideNav({
+  activeTab,
+  onTabChange,
+  currentUser,
+  onSearch,
+  unreadMessages = 0,
+  unreadNotifications = 0,
+}) {
+  const NAV_ITEMS = buildNavItems(unreadMessages, unreadNotifications);
+
   return (
     <nav
       style={{
@@ -228,15 +239,30 @@ function NavItem({ isActive, icon, label, badge, onClick, subtle }) {
   );
 }
 
-const ITEMS = [
+const BASE_ITEMS = [
   { id: "home", label: "Home", icon: House },
   { id: "circle", label: "Circle", icon: Users },
   { id: "opportunities", label: "Jobs", icon: BriefcaseBusiness },
-  { id: "messages", label: "Messages", icon: MessageCircle, badge: 3 },
-  { id: "notifications", label: "Notifs", icon: Bell, badge: 5 },
+  { id: "messages", label: "Messages", icon: MessageCircle },
+  { id: "notifications", label: "Notifs", icon: Bell },
 ];
 
-export function BottomNav({ activeTab, onTabChange }) {
+export function BottomNav({
+  activeTab,
+  onTabChange,
+  unreadMessages = 0,
+  unreadNotifications = 0,
+}) {
+  const ITEMS = BASE_ITEMS.map((item) => ({
+    ...item,
+    badge:
+      item.id === "messages"
+        ? unreadMessages
+        : item.id === "notifications"
+          ? unreadNotifications
+          : null,
+  }));
+
   return (
     <nav
       style={{

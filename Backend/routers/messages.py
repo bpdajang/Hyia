@@ -13,7 +13,7 @@ from utils.auth import get_current_user
 router = APIRouter(prefix="/messages", tags=["Messages"])
 
 
-async def are_connected(db, user_a: str, user_b: str) -> bool:
+async def can_message(db, user_a: str, user_b: str) -> bool:
     conn = await db.connections.find_one({
         "$or": [
             {"sender_id": user_a, "receiver_id": user_b},
@@ -21,7 +21,17 @@ async def are_connected(db, user_a: str, user_b: str) -> bool:
         ],
         "status": ConnectionStatus.accepted.value,
     })
-    return conn is not None
+    if conn:
+        return True
+    # Also allow messaging for active mentorship relationships
+    mentorship = await db.mentorship_requests.find_one({
+        "$or": [
+            {"student_id": user_a, "alumni_id": user_b},
+            {"student_id": user_b, "alumni_id": user_a},
+        ],
+        "status": {"$in": ["pending", "accepted"]},
+    })
+    return mentorship is not None
 
 
 @router.post("/{user_id}", status_code=201)
@@ -41,7 +51,7 @@ async def send_message(
     target = await db.users.find_one({"_id": ObjectId(user_id)})
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
-    if not await are_connected(db, sender_id, user_id):
+    if not await can_message(db, sender_id, user_id):
         raise HTTPException(status_code=403, detail="You can only message connected users")
     if not body.content.strip():
         raise HTTPException(status_code=400, detail="Message content cannot be empty")
@@ -78,7 +88,7 @@ async def get_thread(
 
     if not ObjectId.is_valid(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
-    if not await are_connected(db, my_id, user_id):
+    if not await can_message(db, my_id, user_id):
         raise HTTPException(status_code=403, detail="You can only view threads with connected users")
 
     cursor = db.messages.find({
